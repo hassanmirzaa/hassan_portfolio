@@ -3,40 +3,34 @@
 import { useState } from "react"
 
 export default function Contact() {
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" })
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" })
   const [loading, setLoading] = useState(false)
-  const [status, setStatus] = useState("")
+  const [status, setStatus] = useState<"" | "success" | "error">("")
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setStatus("")
 
     try {
-      const response = await fetch("/api/send-email", {
+      const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, source: "contact_form" }),
       })
-
-      const data = await response.json()
 
       if (response.ok) {
         setStatus("success")
-        alert("Thank you for your message! I will get back to you soon.")
-        setFormData({ name: "", email: "", message: "" })
+        setFormData({ name: "", email: "", phone: "", message: "" })
       } else {
         setStatus("error")
-        alert("Failed to send message. Please try again.")
       }
-    } catch (error) {
-      console.error("Form submission error:", error)
+    } catch {
       setStatus("error")
-      alert("An error occurred. Please try again later.")
     } finally {
       setLoading(false)
     }
@@ -55,7 +49,7 @@ export default function Contact() {
           <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Get In Touch</span>
         </h2>
         <p className="text-center text-foreground/60 mb-12">
-          Have a project in mind? Let's create something amazing together.
+          Have a project in mind? Let&apos;s create something amazing together.
         </p>
 
         <div className="glass-effect p-8 rounded-lg border border-primary/30">
@@ -89,6 +83,21 @@ export default function Contact() {
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Mobile Number <span className="text-foreground/40 font-normal">(Optional)</span>
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                disabled={loading}
+                className="w-full px-4 py-2 bg-background border border-primary/30 rounded-lg text-foreground focus:border-primary focus:outline-none transition-colors disabled:opacity-50"
+                placeholder="+1 (555) 000-0000"
+              />
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-foreground mb-2">Message</label>
               <textarea
                 name="message"
@@ -110,6 +119,9 @@ export default function Contact() {
               {loading ? "Sending..." : "Send Message"}
             </button>
 
+            {status === "success" && (
+              <p className="text-green-400 text-center text-sm">Thank you! Your message has been sent. I&apos;ll get back to you soon.</p>
+            )}
             {status === "error" && (
               <p className="text-red-500 text-center text-sm">Failed to send message. Please try again.</p>
             )}

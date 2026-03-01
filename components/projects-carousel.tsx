@@ -2,18 +2,30 @@
 
 import { useEffect, useState, useRef } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel"
+import { projects as fallbackProjects, type Project } from "@/lib/projects"
 
 export default function ProjectsCarousel() {
   const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
+  const [projects, setProjects] = useState<Project[]>(fallbackProjects)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetch("/api/projects")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setProjects(data)
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (!api) {
@@ -118,57 +130,6 @@ export default function ProjectsCarousel() {
       }
     }
   }, [api])
-  const projects = [
-    {
-      title: "Waterverse Connect",
-      description: "A comprehensive mobile application for Waterverse customers to manage orders, track deliveries, process payments, view deals, and access customer support.",
-      tech: ["Flutter", "Firebase", "Payment Gateway", "Push Notifications", "Google Maps API"],
-      color: "from-primary/40",
-      image: "/waterverse-connect.png",
-      metrics: "Production App",
-      rating: 5.0,
-      year: "2024",
-      category: "Mobile App",
-      link: null,
-    },
-    {
-      title: "AI Workout Planner",
-      description: "An intelligent fitness application that generates personalized workout plans using AI. Features include progress tracking, exercise demonstrations, and adaptive planning.",
-      tech: ["Flutter", "Supabase", "OpenAI API", "Node.js"],
-      color: "from-secondary/40",
-      image: "/ai-workout-planner.png",
-      metrics: "AI-Powered Solution",
-      rating: 5.0,
-      year: "2024",
-      category: "Mobile App",
-      link: null,
-    },
-    {
-      title: "Orange POS & Delivery System",
-      description: "A complete Point of Sale and delivery management system. Features real-time GPS tracking, geo-fencing, dynamic discounts, and real-time communication.",
-      tech: ["Flutter", "Firebase", "Pusher (Real-time)", "SQLite", "Laravel Backend"],
-      color: "from-primary/40",
-      image: "/orange-pos.jpg",
-      metrics: "Enterprise Solution",
-      rating: 5.0,
-      year: "2024",
-      category: "Mobile App",
-      link: null,
-    },
-    {
-      title: "Tusai - AI Recipe Generator",
-      description: "A smart recipe application that generates personalized recipes based on available ingredients. Features recipe saving, shopping lists, and dietary preferences.",
-      tech: ["Flutter", "Google Ads", "Firebase", "OpenAI API"],
-      color: "from-secondary/40",
-      image: "/tusai.jpg",
-      metrics: "AI-Powered App",
-      rating: 5.0,
-      year: "2024",
-      category: "Mobile App",
-      link: null,
-    },
-  ]
-
   return (
     <section id="projects-carousel" className="pt-0 pb-12 px-4">
       <div className="max-w-7xl mx-auto">
@@ -258,12 +219,32 @@ export default function ProjectsCarousel() {
 
                   {/* Action Buttons */}
                   <div className="flex gap-2 mt-auto">
-                    <button className="flex-1 px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors border border-primary/30">
-                      Case Study
-                    </button>
-                    <button className="flex-1 px-4 py-2 border border-primary/30 text-primary rounded-lg text-sm font-medium hover:bg-primary/10 transition-colors">
+                    <Link
+                      href={`/projects/${project.slug}`}
+                      className="flex-1 px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors border border-primary/30 text-center"
+                    >
                       View Details
-                    </button>
+                    </Link>
+                    {project.playStoreUrl ? (
+                      <a
+                        href={project.playStoreUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 px-4 py-2 border border-primary/30 text-primary rounded-lg text-sm font-medium hover:bg-primary/10 transition-colors text-center inline-flex items-center justify-center gap-1.5"
+                      >
+                        <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                          <path d="M3.609 1.814 13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92ZM14.852 13.06l2.36 2.36-9.676 5.497 7.316-7.856ZM18.44 10.18l2.883 1.638a1 1 0 0 1 0 1.738l-2.882 1.637L15.667 12l2.774-1.82ZM7.536 3.083l9.676 5.498-2.36 2.36-7.316-7.858Z" />
+                        </svg>
+                        Play Store
+                      </a>
+                    ) : (
+                      <Link
+                        href={`/projects/${project.slug}`}
+                        className="flex-1 px-4 py-2 border border-primary/30 text-primary rounded-lg text-sm font-medium hover:bg-primary/10 transition-colors text-center"
+                      >
+                        Case Study
+                      </Link>
+                    )}
                   </div>
                 </div>
               </CarouselItem>

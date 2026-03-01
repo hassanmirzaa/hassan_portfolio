@@ -11,8 +11,10 @@ import About from "@/components/about"
 import Experience from "@/components/experience"
 import Testimonials from "@/components/testimonials"
 import Blogs from "@/components/blogs"
+import FAQ from "@/components/faq"
 import Contact from "@/components/contact"
 import FloatingCTA from "@/components/floating-cta"
+import Chatbot from "@/components/chatbot"
 import ProgressBar from "@/components/progress-bar"
 import BackgroundAnimation from "@/components/background-animation"
 import CursorGlow from "@/components/cursor-glow"
@@ -47,8 +49,10 @@ export default function Home() {
       <About />
       <Experience />
       <Blogs />
+      <FAQ />
       <Contact />
       <FloatingCTA />
+      <Chatbot />
     </main>
   )
 }

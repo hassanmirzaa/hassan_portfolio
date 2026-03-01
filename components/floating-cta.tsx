@@ -23,7 +23,7 @@ export default function FloatingCTA() {
       {isVisible && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-40 w-12 h-12 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/50 hover:shadow-xl hover:shadow-primary/60 transition-all duration-300 flex items-center justify-center animate-glow"
+          className="fixed bottom-8 left-8 z-40 w-12 h-12 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/50 hover:shadow-xl hover:shadow-primary/60 transition-all duration-300 flex items-center justify-center animate-glow"
         >
           ↑
         </button>

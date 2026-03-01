@@ -12,7 +12,7 @@ export default function Projects() {
       color: "from-primary/40",
       image: "/waterverse-connect.png",
       metrics: "Production App",
-      link: null, // Add app store link if available
+      link: 'https://play.google.com/store/apps/details?id=com.ig.waterverse&pcampaignid=web_share', // Add app store link if available
     },
     {
       title: "AI Workout Planner",
