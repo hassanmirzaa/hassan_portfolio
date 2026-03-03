@@ -126,8 +126,9 @@ export async function getProjects(): Promise<Project[]> {
       .eq("is_published", true)
       .order("sort_order", { ascending: true })
 
-    if (error || !data || data.length === 0) return fallbackProjects
-    return data.map(mapRow)
+    if (error || !data) return fallbackProjects
+    const mapped = data.map(mapRow)
+    return mapped.length > 0 ? mapped : fallbackProjects
   } catch {
     return fallbackProjects
   }

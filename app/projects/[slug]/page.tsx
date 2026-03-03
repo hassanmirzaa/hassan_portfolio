@@ -7,6 +7,9 @@ import Navbar from "@/components/navbar"
 
 type Props = { params: Promise<{ slug: string }> }
 
+// Always fetch fresh project data so demo_video and other Supabase updates show without redeploy
+export const dynamic = "force-dynamic"
+
 export async function generateStaticParams() {
   const slugs = await getProjectSlugs()
   return slugs.map((slug) => ({ slug }))
@@ -98,14 +101,25 @@ export default async function ProjectDetailPage({ params }: Props) {
           {project.demoVideo && (
             <section className="mb-10">
               <h2 className="text-xl font-semibold text-foreground mb-3">Demo</h2>
-              <div className="relative w-full aspect-video rounded-xl border border-primary/30 overflow-hidden">
+              <div className="relative w-full aspect-video rounded-xl border border-primary/30 overflow-hidden bg-black">
                 <video
                   src={project.demoVideo}
                   controls
-                  className="w-full h-full object-contain bg-black"
+                  className="w-full h-full object-contain"
                   preload="metadata"
-                />
+                  playsInline
+                >
+                  Your browser does not support the video tag.
+                </video>
               </div>
+              <a
+                href={project.demoVideo}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-block text-sm text-primary/80 hover:text-primary"
+              >
+                Open video in new tab →
+              </a>
             </section>
           )}
 
