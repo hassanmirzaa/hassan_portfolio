@@ -53,7 +53,7 @@ export default function About() {
 
           <div className={`scroll-fade-in scroll-stagger-3 ${isVisible ? "visible" : ""}`}>
             <p className="text-lg text-foreground/80 mb-6 leading-relaxed">
-              I'm a passionate Flutter developer with 3+ years of experience building cross-platform mobile applications. 
+              I'm a passionate Software Engineer with 3+ years of experience building cross-platform mobile applications. 
               My journey in mobile development started with a fascination for creating apps that work seamlessly on both iOS 
               and Android, which led me to specialize in Flutter and modern mobile development practices.
             </p>
