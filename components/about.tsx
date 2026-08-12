@@ -53,14 +53,16 @@ export default function About() {
 
           <div className={`scroll-fade-in scroll-stagger-3 ${isVisible ? "visible" : ""}`}>
             <p className="text-lg text-foreground/80 mb-6 leading-relaxed">
-              I'm a passionate Software Engineer with 3+ years of experience building cross-platform mobile applications. 
-              My journey in mobile development started with a fascination for creating apps that work seamlessly on both iOS 
-              and Android, which led me to specialize in Flutter and modern mobile development practices.
+              I'm a passionate Full Stack Mobile Engineer with 3+ years of experience building cross-platform mobile
+              applications end to end — from pixel-perfect Flutter frontends to the backends and APIs that power them.
+              My journey started with a fascination for creating apps that work seamlessly on both iOS and Android, and
+              grew into engineering the full stack behind them.
             </p>
             <p className="text-lg text-foreground/80 mb-8 leading-relaxed">
-              I specialize in developing production-ready mobile applications using Flutter, with expertise in Firebase, 
-              Supabase, state management, and mobile architecture patterns. I'm passionate about writing clean, maintainable 
-              code and creating intuitive user experiences that perform exceptionally across all devices.
+              On the frontend I specialize in Flutter with clean architecture and state management. On the backend I build
+              full web applications, admin panels, and dashboards — not just APIs — using Laravel (PHP) and Node.js,
+              alongside Firebase and Supabase for auth, real-time data, and serverless functions. I love writing clean,
+              maintainable code that ships fast and performs exceptionally across the entire stack.
             </p>
 
             <div className="space-y-4">
@@ -70,19 +72,19 @@ export default function About() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-primary">✓</span>
+                <span>Laravel & Node.js web apps, admin panels & APIs</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-primary">✓</span>
+                <span>REST API design, auth & database architecture</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-primary">✓</span>
                 <span>Firebase & Supabase integration</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-primary">✓</span>
                 <span>State management (Provider, Riverpod, Bloc)</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-primary">✓</span>
-                <span>Mobile UI/UX design & optimization</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-primary">✓</span>
-                <span>RESTful API integration</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-primary">✓</span>

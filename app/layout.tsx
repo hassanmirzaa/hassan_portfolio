@@ -10,9 +10,9 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"], variable: "--font-poppins" })
 
 export const metadata: Metadata = {
-  title: "Hassan Mirza - Flutter Mobile Developer",
+  title: "Hassan Mirza - Full Stack Mobile Engineer",
   description:
-    "Flutter mobile developer specializing in cross-platform iOS and Android applications. Building production-ready apps with Flutter, Firebase, and modern mobile architectures.",
+    "Full stack mobile engineer building cross-platform iOS and Android apps with Flutter, backed by robust backends in Laravel (PHP), Node.js, Firebase, and Supabase. Production-ready apps and scalable APIs, end to end.",
   generator: "Next.js",
 }
 

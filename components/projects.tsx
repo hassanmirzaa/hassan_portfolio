@@ -8,7 +8,7 @@ export default function Projects() {
     {
       title: "Waterverse Connect",
       description: "A comprehensive mobile application for Waterverse customers to manage orders, track deliveries, process payments, view deals, and access customer support. Features real-time order tracking with Google Maps integration, secure payment processing, push notifications, and a seamless user experience.",
-      tech: ["Flutter", "Firebase", "Payment Gateway", "Push Notifications", "Google Maps API"],
+      tech: ["Flutter", "Laravel (PHP) API", "Firebase", "Payment Gateway", "Push Notifications", "Google Maps API"],
       color: "from-primary/40",
       image: "/waterverse-connect.png",
       metrics: "Production App",
@@ -17,7 +17,7 @@ export default function Projects() {
     {
       title: "AI Workout Planner",
       description: "An intelligent fitness application that generates personalized workout plans using AI. Users input their fitness goals, available equipment, and preferences, and the app creates customized workout routines. Features include progress tracking, exercise demonstrations, and adaptive planning based on user feedback.",
-      tech: ["Flutter", "Supabase", "OpenAI API", "Node.js"],
+      tech: ["Flutter", "Node.js API", "Supabase", "OpenAI API"],
       color: "from-secondary/40",
       image: "/ai-workout-planner.png",
       metrics: "AI-Powered Solution",
@@ -26,7 +26,7 @@ export default function Projects() {
     {
       title: "Orange POS & Delivery System",
       description: "A complete Point of Sale and delivery management system for Orange stores. Enables store owners to manage inventory, process orders, handle payments, track deliveries with real-time GPS, implement geo-fencing for delivery zones, apply dynamic discounts, and manage customer complaints through real-time communication.",
-      tech: ["Flutter", "Firebase", "Pusher (Real-time)", "SQLite", "Laravel Backend"],
+      tech: ["Flutter", "Laravel (PHP) Backend", "MySQL", "Pusher (Real-time)", "SQLite", "Firebase"],
       color: "from-primary/40",
       image: "/orange-pos.jpg",
       metrics: "Enterprise Solution",
@@ -86,7 +86,7 @@ export default function Projects() {
           </span>
         </h2>
         <p className="text-center text-foreground/60 mb-16 max-w-2xl mx-auto scroll-fade-in scroll-stagger-1">
-          Production-ready mobile applications built with Flutter, showcasing real-world solutions and technical expertise.
+          Production-ready full stack applications — Flutter frontends powered by Laravel and Node.js backends — showcasing real-world solutions and technical expertise.
         </p>
 
         <div className="space-y-8">

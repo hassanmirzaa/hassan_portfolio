@@ -6,10 +6,10 @@ export default function Experience() {
   const [visibleExperiences, setVisibleExperiences] = useState<boolean[]>([])
   const experiences = [
     {
-      title: "Software Engineer",
+      title: "Full Stack Mobile Engineer",
       company: "Ismail Industries Ltd",
       period: "2023 - Present",
-      description: "Developing and maintaining cross-platform mobile applications using Flutter. Working on production apps with Firebase integration, state management, and modern mobile architectures.",
+      description: "Developing and maintaining cross-platform mobile applications using Flutter, backed by custom APIs built in Laravel (PHP) and Node.js. Working on production apps with Firebase/Supabase integration, database design, state management, and modern full-stack architectures.",
     },
   ]
 

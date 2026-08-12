@@ -34,7 +34,7 @@ const faqs = [
   },
   {
     q: "What backend technologies do you work with?",
-    a: "I primarily work with Firebase and Supabase for backend services — authentication, real-time databases, cloud storage, and serverless functions. For more complex needs, I also integrate with Laravel, Node.js, and custom REST APIs.",
+    a: "I'm a full stack engineer, so I build the backend and the web side myself — not just APIs. My main stacks are Laravel (PHP) and Node.js/Express for full web applications, admin panels, dashboards, REST APIs, authentication, and databases (MySQL/PostgreSQL). I also use Firebase and Supabase for real-time data, auth, storage, and serverless functions when they're the right fit.",
   },
   {
     q: "Can you help turn my idea into a product roadmap?",
@@ -46,7 +46,7 @@ const faqs = [
   },
   {
     q: "Can you build a SaaS product or web application too?",
-    a: "My core expertise is mobile, but I can build companion web dashboards and admin panels using Next.js and React. For full SaaS products, I focus on the mobile side and can collaborate with web specialists if needed — or handle it end-to-end for smaller scopes.",
+    a: "Yes — as a full stack engineer I can handle it end to end. I build the mobile app in Flutter, and the full web side — web apps, admin panels, and dashboards — in Laravel, Node.js, and Next.js/React, wired to custom APIs and databases. That means one person owning the whole stack, from database to app store.",
   },
   {
     q: "How do you handle app store submission?",

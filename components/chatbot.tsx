@@ -39,7 +39,7 @@ export default function Chatbot() {
         {
           id: "greeting",
           role: "assistant",
-          text: "Hey! Got an app idea brewing? You're in the right place. Hassan builds pixel-perfect Flutter apps in days, not months. What's on your mind?",
+          text: "Hey! Got an app idea brewing? You're in the right place. Hassan builds full stack apps — pixel-perfect Flutter frontends with Laravel/Node.js backends — in days, not months. What's on your mind?",
         },
       ])
     }
@@ -155,7 +155,7 @@ export default function Chatbot() {
 
       {/* Chat window */}
       {open && (
-        <div className="fixed bottom-24 right-8 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-8rem)] flex flex-col bg-background border border-primary/30 rounded-2xl shadow-2xl shadow-primary/20 overflow-hidden animate-fade-in">
+        <div className="fixed z-50 flex flex-col bg-background border border-primary/30 rounded-2xl shadow-2xl shadow-primary/20 overflow-hidden animate-fade-in inset-x-3 top-3 bottom-24 sm:inset-x-auto sm:top-auto sm:right-8 sm:bottom-24 sm:w-[360px] sm:h-[500px] sm:max-h-[calc(100vh-8rem)]">
           {/* Header */}
           <div className="px-4 py-3 bg-gradient-to-r from-primary/20 to-secondary/20 border-b border-primary/30 flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-foreground text-sm font-bold">
@@ -209,12 +209,13 @@ export default function Chatbot() {
                 onKeyDown={handleKeyDown}
                 disabled={loading}
                 placeholder="Type a message..."
-                className="flex-1 px-3 py-2 bg-card border border-primary/30 rounded-xl text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary transition-colors disabled:opacity-50"
+                enterKeyHint="send"
+                className="flex-1 min-w-0 px-3 py-2 bg-card border border-primary/30 rounded-xl text-base sm:text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary transition-colors disabled:opacity-50"
               />
               <button
                 onClick={sendMessage}
                 disabled={loading || !input.trim()}
-                className="px-3 py-2 bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-primary/30 transition-all"
+                className="shrink-0 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-primary/30 transition-all"
               >
                 Send
               </button>

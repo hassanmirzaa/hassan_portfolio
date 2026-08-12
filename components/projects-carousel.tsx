@@ -3,20 +3,12 @@
 import { useEffect, useState, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  type CarouselApi,
-} from "@/components/ui/carousel"
 import { projects as fallbackProjects, type Project } from "@/lib/projects"
 
 export default function ProjectsCarousel() {
-  const [api, setApi] = useState<CarouselApi>()
-  const [current, setCurrent] = useState(0)
   const [projects, setProjects] = useState<Project[]>(fallbackProjects)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch("/api/projects")
@@ -28,127 +20,101 @@ export default function ProjectsCarousel() {
   }, [])
 
   useEffect(() => {
-    if (!api) {
-      return
-    }
+    const track = trackRef.current
+    const container = carouselRef.current
+    if (!track || !container) return
 
-    setCurrent(api.selectedScrollSnap())
+    // Respect users who prefer reduced motion.
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    if (prefersReduced) return
 
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap())
-    })
-  }, [api])
+    const scrollSpeed = 0.6 // pixels per frame (~36px/s at 60fps)
 
-  useEffect(() => {
-    if (!api || !carouselRef.current) return
-
+    // We own the transform entirely — no other library touches it, so there
+    // is nothing to fight with and the position can never be clobbered.
+    let offset = 0
+    // Width of a single copy of the list. The track renders the list twice,
+    // so wrapping at exactly half the width produces a seamless loop.
+    let oneSetWidth = track.scrollWidth / 2
     let isPaused = false
     let animationFrameId: number | null = null
-    const scrollSpeed = 1 // pixels per frame - 1.5x speed (was 0.5)
 
-    // Find the Embla container element that gets transformed
-    const findContainer = (): HTMLElement | null => {
-      const viewport = carouselRef.current?.querySelector('[data-slot="carousel-content"]') as HTMLElement
-      return viewport?.firstElementChild as HTMLElement || null
+    const measure = () => {
+      oneSetWidth = track.scrollWidth / 2
     }
 
-    const smoothScroll = () => {
-      if (isPaused) {
-        animationFrameId = requestAnimationFrame(smoothScroll)
-        return
+    const step = () => {
+      if (!isPaused && oneSetWidth > 0) {
+        offset -= scrollSpeed
+        // Wrap by ADDING one set width (not snapping to 0) so the visible
+        // position stays continuous — no visible jump.
+        if (offset <= -oneSetWidth) {
+          offset += oneSetWidth
+        }
+        track.style.transform = `translate3d(${offset}px, 0, 0)`
       }
-
-      const container = findContainer()
-      if (!container) {
-        animationFrameId = requestAnimationFrame(smoothScroll)
-        return
-      }
-
-      // Get current transform value
-      const style = window.getComputedStyle(container)
-      const matrix = new DOMMatrix(style.transform)
-      let currentX = matrix.e // Current translateX value
-
-      // Calculate scroll distance
-      currentX -= scrollSpeed
-
-      // Get container and viewport dimensions for loop calculation
-      const containerWidth = container.scrollWidth
-      const oneSetWidth = containerWidth / 3 // Since we have 3 sets of projects
-      
-      // Reset when we've scrolled one full set (seamless loop)
-      if (Math.abs(currentX) >= oneSetWidth) {
-        currentX = 0
-      }
-
-      // Apply transform directly (bypassing Embla for continuous scroll)
-      container.style.transform = `translateX(${currentX}px)`
-      container.style.willChange = 'transform'
-      
-      animationFrameId = requestAnimationFrame(smoothScroll)
+      animationFrameId = requestAnimationFrame(step)
     }
 
-    const startAutoScroll = () => {
-      if (animationFrameId !== null) return // Already running
-      animationFrameId = requestAnimationFrame(smoothScroll)
-    }
+    // Recompute the set width once images/layout settle and on resize.
+    const resizeObserver = new ResizeObserver(measure)
+    resizeObserver.observe(track)
 
-    const stopAutoScroll = () => {
-      if (animationFrameId !== null) {
-        cancelAnimationFrame(animationFrameId)
-        animationFrameId = null
-      }
-    }
-
-    // Start auto-scroll after carousel is ready (give it time to render)
+    // Give layout/images a moment before first measure, then start.
     const initTimeout = setTimeout(() => {
-      startAutoScroll()
-    }, 1500)
+      measure()
+      if (animationFrameId === null) {
+        animationFrameId = requestAnimationFrame(step)
+      }
+    }, 300)
 
-    // Pause on hover
     const handleMouseEnter = () => {
       isPaused = true
     }
     const handleMouseLeave = () => {
       isPaused = false
-      if (animationFrameId === null) {
-        startAutoScroll()
-      }
     }
 
-    if (carouselRef.current) {
-      carouselRef.current.addEventListener("mouseenter", handleMouseEnter)
-      carouselRef.current.addEventListener("mouseleave", handleMouseLeave)
+    // Pause while the tab is hidden so we don't accumulate a huge jump on return.
+    const handleVisibility = () => {
+      isPaused = document.hidden
     }
+
+    container.addEventListener("mouseenter", handleMouseEnter)
+    container.addEventListener("mouseleave", handleMouseLeave)
+    document.addEventListener("visibilitychange", handleVisibility)
 
     return () => {
       clearTimeout(initTimeout)
-      stopAutoScroll()
-      if (carouselRef.current) {
-        carouselRef.current.removeEventListener("mouseenter", handleMouseEnter)
-        carouselRef.current.removeEventListener("mouseleave", handleMouseLeave)
-      }
+      if (animationFrameId !== null) cancelAnimationFrame(animationFrameId)
+      resizeObserver.disconnect()
+      container.removeEventListener("mouseenter", handleMouseEnter)
+      container.removeEventListener("mouseleave", handleMouseLeave)
+      document.removeEventListener("visibilitychange", handleVisibility)
     }
-  }, [api])
+  }, [projects])
+
   return (
     <section id="projects-carousel" className="pt-0 pb-12 px-4">
       <div className="max-w-7xl mx-auto">
-        <div id="auto-scroll-carousel" ref={carouselRef} className="relative">
-          <Carousel
-            setApi={setApi}
-            opts={{
-              align: "start",
-              loop: true, // Enable loop for seamless scrolling
-              dragFree: true, // Enable smooth dragging
-              duration: 25,
-              skipSnaps: true, // Skip snaps for continuous scroll
-            }}
-            className="w-full"
+        <div
+          id="auto-scroll-carousel"
+          ref={carouselRef}
+          className="relative overflow-hidden"
+        >
+          <div
+            ref={trackRef}
+            className="flex will-change-transform"
+            style={{ transform: "translate3d(0, 0, 0)" }}
           >
-          <CarouselContent className="-ml-2 md:-ml-4">
-            {/* Duplicate items multiple times for seamless infinite scroll */}
-            {[...projects, ...projects, ...projects].map((project, idx) => (
-              <CarouselItem key={`${idx}-${project.title}`} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+            {/* List rendered twice for a seamless, continuous loop */}
+            {[...projects, ...projects].map((project, idx) => (
+              <div
+                key={`${idx}-${project.title}`}
+                className="shrink-0 basis-full sm:basis-1/2 lg:basis-1/3 pl-2 md:pl-4"
+              >
                 <div className="glass-effect card-hover p-6 rounded-lg border border-primary/30 bg-gradient-to-r from-primary/10 to-transparent h-full flex flex-col group">
                   {/* Image */}
                   <div className="relative h-48 rounded-lg border border-primary/20 overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20 mb-4 group-hover/image:scale-105 transition-transform duration-500">
@@ -247,13 +213,11 @@ export default function ProjectsCarousel() {
                     )}
                   </div>
                 </div>
-              </CarouselItem>
+              </div>
             ))}
-          </CarouselContent>
-          </Carousel>
+          </div>
         </div>
       </div>
     </section>
   )
 }
-

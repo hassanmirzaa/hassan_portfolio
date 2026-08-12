@@ -11,19 +11,24 @@ export default function Services() {
       description: "Building cross-platform iOS and Android applications with Flutter, ensuring native performance and beautiful UI.",
     },
     {
+      icon: "🐘",
+      title: "Laravel (PHP) Web Apps & Backends",
+      description: "Building full web applications, admin panels, and dashboards with Laravel — REST APIs, authentication, Eloquent/MySQL, Blade/Livewire UIs, queues, and clean architecture.",
+    },
+    {
+      icon: "🟢",
+      title: "Node.js Web Apps & Services",
+      description: "Developing fast web apps, admin dashboards, and real-time backends with Node.js and Express — REST APIs, WebSockets, third-party integrations, and serverless functions.",
+    },
+    {
       icon: "🔥",
       title: "Firebase & Supabase Integration",
       description: "Seamless integration with Firebase and Supabase for authentication, real-time databases, cloud functions, storage, and analytics.",
     },
     {
       icon: "⚡",
-      title: "Mobile Architecture",
-      description: "Designing scalable mobile app architectures with clean code principles, state management, and best practices.",
-    },
-    {
-      icon: "🎨",
-      title: "Mobile UI/UX Design",
-      description: "Creating intuitive, user-friendly mobile interfaces that follow platform guidelines and design best practices.",
+      title: "Full Stack Architecture",
+      description: "Designing scalable end-to-end architectures — from mobile state management to database schema, API design, and clean code across the stack.",
     },
     {
       icon: "🚀",
@@ -76,7 +81,7 @@ export default function Services() {
           <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent animate-gradient-shift">Services</span>
         </h2>
         <p className="text-center text-foreground/60 mb-16 max-w-2xl mx-auto scroll-fade-in scroll-stagger-1">
-          Specialized mobile development services to build, deploy, and optimize your iOS and Android applications.
+          End-to-end development services to design, build, and deploy your mobile apps — frontend, backend, and everything in between.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
