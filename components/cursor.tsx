@@ -18,10 +18,8 @@ export default function Cursor() {
     }
     const over = (e: PointerEvent) => {
       const t = e.target as HTMLElement
-      const peek = t.closest("[data-peek]")
       const drag = t.closest(".drag")
       const link = t.closest("a, button, input, textarea, select")
-      el.classList.toggle("hide", Boolean(peek))
       el.classList.toggle("big", Boolean(drag))
       el.classList.toggle("link", Boolean(link) && !drag)
       el.textContent = drag ? "drag" : ""

@@ -48,7 +48,11 @@ export type ProjectData = {
   metrics?: string | null
   accent_color?: string
   cover_image?: string | null
-  screens?: { url: string; caption?: string }[]
+  screens?: { url: string; caption?: string; text?: string }[]
+  client?: string | null
+  platforms?: string[]
+  features?: { title: string; text?: string }[]
+  highlights?: { value: string; label: string }[]
   play_store_url?: string | null
   app_store_url?: string | null
   github_url?: string | null
@@ -74,10 +78,33 @@ export function ProjectForm({ p }: { p: ProjectData }) {
         <label htmlFor="summary">One-line summary (shown in the work list)</label>
         <input id="summary" name="summary" type="text" maxLength={160} defaultValue={p.summary ?? ""} />
       </div>
+      <div className="two">
+        <div><label htmlFor="client">Client / company it was built for</label><input id="client" name="client" type="text" defaultValue={p.client ?? ""} placeholder="Waterverse" /></div>
+        <div>
+          <span className="lbl2">Platforms</span>
+          <div className="checks" style={{ paddingTop: 8 }}>
+            {[["ios", "iOS"], ["android", "Android"], ["web", "Web"]].map(([v, l]) => (
+              <label key={v}><input type="checkbox" name="platforms" value={v} defaultChecked={(p.platforms ?? []).includes(v)} /> {l}</label>
+            ))}
+          </div>
+        </div>
+      </div>
       <div>
         <label htmlFor="description">About this app</label>
         <textarea id="description" name="description" defaultValue={p.description} required />
       </div>
+      <fieldset>
+        <legend>FEATURES AND NUMBERS (shown as cards and chips on the site)</legend>
+        <div>
+          <label htmlFor="features">Features, one per line: Title | what it does</label>
+          <textarea id="features" name="features" style={{ minHeight: 190 }} defaultValue={(p.features ?? []).map((f) => (f.text ? `${f.title} | ${f.text}` : f.title)).join("\n")} placeholder={"Live order tracking | Customers follow the driver on a map\nPush reminders | ..."} />
+          <div className="hint">List everything the app can do. Clients like detail. The first five show as chips on the home page.</div>
+        </div>
+        <div>
+          <label htmlFor="highlights">Numbers, one per line: value | label (real numbers only)</label>
+          <textarea id="highlights" name="highlights" defaultValue={(p.highlights ?? []).map((h) => `${h.value} | ${h.label}`).join("\n")} placeholder={"1K+ | Downloads\n4.7 | Play Store rating"} />
+        </div>
+      </fieldset>
       <fieldset>
         <legend>CASE STUDY (optional, leave blank to hide a section)</legend>
         <div><label htmlFor="role">Your role</label><input id="role" name="role" type="text" defaultValue={p.role ?? ""} placeholder="Flutter app and Laravel API" /></div>
@@ -119,8 +146,8 @@ export function ProjectForm({ p }: { p: ProjectData }) {
         </div>
         <div><label htmlFor="cover_file">Upload cover</label><input id="cover_file" name="cover_file" type="file" accept="image/png,image/jpeg,image/webp,image/avif" /></div>
         <div>
-          <label htmlFor="screens">Screens, one per line: URL | caption</label>
-          <textarea id="screens" name="screens" defaultValue={(p.screens ?? []).map((s) => (s.caption ? `${s.url} | ${s.caption}` : s.url)).join("\n")} />
+          <label htmlFor="screens">Screens, one per line: URL | title | description</label>
+          <textarea id="screens" name="screens" defaultValue={(p.screens ?? []).map((s) => { const parts = [s.url, s.caption ?? "", s.text ?? ""]; while (parts.length > 1 && !parts[parts.length - 1]) parts.pop(); return parts.join(" | ") }).join("\n")} />
         </div>
         <div><label htmlFor="screen_files">Upload more screens (added to the list)</label><input id="screen_files" name="screen_files" type="file" multiple accept="image/png,image/jpeg,image/webp,image/avif" /></div>
       </fieldset>

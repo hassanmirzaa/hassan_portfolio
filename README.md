@@ -36,6 +36,7 @@ Files are in `supabase/`. Run them in order; each is safe to re-run. Nothing is 
 | 4 | `04_storage.sql` | locks the `project-assets` bucket: public read, admin-only write |
 | 5 | `05_seed_projects.sql` | the four apps from the redesign |
 | 6 | `06_make_me_admin.sql` | create the Auth user first, then this makes it an admin |
+| 5b | `10_project_details.sql` | client, platforms, features, highlights + draft details for the four apps |
 | - | `07_verify.sql` | read-only health check, run any time |
 | 7 | `08_backup_old_data.sql` | copies old data into hidden backup tables |
 | 8 | `09_cleanup_old.sql` | DESTRUCTIVE, all commented out, run by hand after backups |

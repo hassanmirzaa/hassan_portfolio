@@ -40,7 +40,7 @@ with need(tbl, col) as (values
   ('projects','problem'),('projects','approach'),('projects','outcome'),('projects','tech_stack'),('projects','accent_color'),
   ('projects','cover_image'),('projects','screens'),('projects','status'),('projects','is_confidential'),('projects','is_published'),
   ('projects','sort_order'),('projects','play_store_url'),('projects','app_store_url'),('projects','github_url'),('projects','live_url'),
-  ('projects','demo_video'),('projects','year'),('projects','category'),('projects','metrics'),('projects','is_featured'),
+  ('projects','demo_video'),('projects','client'),('projects','platforms'),('projects','features'),('projects','highlights'),('projects','year'),('projects','category'),('projects','metrics'),('projects','is_featured'),
   ('blogs','slug'),('blogs','excerpt'),('blogs','content'),('blogs','category'),('blogs','author'),('blogs','tags'),
   ('blogs','published_at'),('blogs','reading_minutes'),('blogs','is_published'),('blogs','sort_order'),
   ('portfolio_leads','name'),('portfolio_leads','email'),('portfolio_leads','message'),('portfolio_leads','project_type'),

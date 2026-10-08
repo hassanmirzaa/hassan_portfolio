@@ -100,22 +100,50 @@ export async function saveProject(id: string | null, _: ActionState, form: FormD
     const cover = files(form, "cover_file")[0]
     if (cover) cover_image = await upload(supabase, cover, "covers")
 
-    // Screens: one "url | caption" per line, plus any newly uploaded files appended.
+    // Screens: one per line, "url | title | description". Title and description are optional.
     const screens = String(form.get("screens") ?? "")
       .split("\n")
       .map((l) => l.trim())
       .filter(Boolean)
       .map((l) => {
-        const [url, ...cap] = l.split("|")
-        return { url: url.trim(), caption: cap.join("|").trim() || undefined }
+        const [url, caption, ...text] = l.split("|").map((x) => x.trim())
+        return { url, caption: caption || undefined, text: text.join(" | ") || undefined }
       })
-      .filter((s) => /^https?:\/\/|^\//.test(s.url))
-    for (const f of files(form, "screen_files")) screens.push({ url: await upload(supabase, f, "screens"), caption: undefined })
+      .filter((x) => /^https?:\/\/|^\//.test(x.url))
+    for (const f of files(form, "screen_files")) screens.push({ url: await upload(supabase, f, "screens"), caption: undefined, text: undefined })
+
+    // Features: one per line, "Title | description".
+    const features = String(form.get("features") ?? "")
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((l) => {
+        const [title, ...text] = l.split("|").map((x) => x.trim())
+        return { title, text: text.join(" | ") || undefined }
+      })
+      .filter((x) => x.title)
+
+    // Highlights: one per line, "value | label". Real numbers only.
+    const highlights = String(form.get("highlights") ?? "")
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((l) => {
+        const [value, ...label] = l.split("|").map((x) => x.trim())
+        return { value, label: label.join(" | ") }
+      })
+      .filter((x) => x.value && x.label)
+
+    const platforms = form.getAll("platforms").map(String).filter((x) => ["ios", "android", "web"].includes(x))
 
     const row = {
       ...parsed.data,
       cover_image,
       screens,
+      features,
+      highlights,
+      platforms,
+      client: text(form, "client"),
       role: text(form, "role"),
       problem: text(form, "problem"),
       approach: text(form, "approach"),
