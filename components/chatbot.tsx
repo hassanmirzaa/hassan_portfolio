@@ -2,225 +2,162 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 
-type Message = {
-  id: string
-  role: "user" | "assistant"
-  text: string
-}
+type Message = { id: string; role: "user" | "assistant"; text: string }
 
 const BOOK_CALL_REGEX = /\|\|\|BOOK_CALL\|\|\|([\s\S]*?)\|\|\|END\|\|\|/
+const GREETING =
+  "Hey! Got an app idea brewing? Hassan builds the whole thing: Flutter app, Laravel or Node backend, and the store release. What are you thinking of building?"
 
 export default function Chatbot() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
-  const [showBubble, setShowBubble] = useState(false)
-  const [hasGreeted, setHasGreeted] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [bubble, setBubble] = useState(false)
+  const end = useRef<HTMLDivElement>(null)
+  const greeted = useRef(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowBubble(true)
-    }, 2000)
-    return () => clearTimeout(timer)
+    let seen = false
+    try {
+      seen = sessionStorage.getItem("chat-bubble") === "1"
+    } catch {}
+    if (seen) return
+    const show = setTimeout(() => setBubble(true), 4000)
+    const hide = setTimeout(() => setBubble(false), 12000)
+    return () => {
+      clearTimeout(show)
+      clearTimeout(hide)
+    }
   }, [])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    end.current?.scrollIntoView({ behavior: "smooth", block: "end" })
+  }, [messages, loading])
 
-  const handleOpen = useCallback(() => {
+  const openChat = useCallback(() => {
     setOpen(true)
-    setShowBubble(false)
-    if (!hasGreeted) {
-      setHasGreeted(true)
-      setMessages([
-        {
-          id: "greeting",
-          role: "assistant",
-          text: "Hey! Got an app idea brewing? You're in the right place. Hassan builds full stack apps — pixel-perfect Flutter frontends with Laravel/Node.js backends — in days, not months. What's on your mind?",
-        },
-      ])
+    setBubble(false)
+    try {
+      sessionStorage.setItem("chat-bubble", "1")
+    } catch {}
+    if (!greeted.current) {
+      greeted.current = true
+      setMessages([{ id: "greeting", role: "assistant", text: GREETING }])
     }
-  }, [hasGreeted])
+  }, [])
 
-  const saveBooking = async (bookingData: { name: string; email?: string; call_date: string; call_time: string }) => {
+  const saveBooking = async (b: { name: string; email?: string; call_date: string; call_time: string }) => {
     try {
       await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...bookingData,
-          source: "chatbot_booking",
-          message: `Call booked via chatbot for ${bookingData.call_date} at ${bookingData.call_time}`,
+          ...b,
+          source: "chatbot",
+          message: `Call requested via chatbot for ${b.call_date} at ${b.call_time}`,
         }),
       })
-    } catch (err) {
-      console.error("Failed to save booking:", err)
-    }
+    } catch {}
   }
 
-  const sendMessage = async () => {
-    const trimmed = input.trim()
-    if (!trimmed || loading) return
-
-    const userMsg: Message = { id: Date.now().toString(), role: "user", text: trimmed }
-    const updatedMessages = [...messages, userMsg]
-    setMessages(updatedMessages)
+  const send = async () => {
+    const text = input.trim()
+    if (!text || loading) return
+    const next = [...messages, { id: String(Date.now()), role: "user" as const, text }]
+    setMessages(next)
     setInput("")
     setLoading(true)
-
+    const add = (t: string) => setMessages((p) => [...p, { id: String(Date.now() + 1), role: "assistant", text: t }])
     try {
-      const chatHistory = updatedMessages
+      const history = next
         .filter((m) => m.id !== "greeting")
-        .map((m) => ({
-          role: m.role === "user" ? ("user" as const) : ("model" as const),
-          parts: [{ text: m.text }],
-        }))
-
+        .map((m) => ({ role: m.role === "user" ? ("user" as const) : ("model" as const), parts: [{ text: m.text }] }))
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: chatHistory }),
+        body: JSON.stringify({ messages: history }),
       })
-
       const data = await res.json()
-
       if (data.success && data.reply) {
-        let replyText = data.reply as string
-
-        const bookingMatch = replyText.match(BOOK_CALL_REGEX)
-        if (bookingMatch) {
+        let reply = data.reply as string
+        const m = reply.match(BOOK_CALL_REGEX)
+        if (m) {
           try {
-            const bookingData = JSON.parse(bookingMatch[1])
-            await saveBooking(bookingData)
-          } catch {
-            console.error("Failed to parse booking data")
-          }
-          replyText = replyText.replace(BOOK_CALL_REGEX, "").trim()
+            await saveBooking(JSON.parse(m[1]))
+          } catch {}
+          reply = reply.replace(BOOK_CALL_REGEX, "").trim()
         }
-
-        setMessages((prev) => [
-          ...prev,
-          { id: (Date.now() + 1).toString(), role: "assistant", text: replyText },
-        ])
+        add(reply)
       } else {
-        setMessages((prev) => [
-          ...prev,
-          { id: (Date.now() + 1).toString(), role: "assistant", text: "Oops, something went wrong. Try again?" },
-        ])
+        add("Something went wrong on my side. Try again, or email Hassan directly.")
       }
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        { id: (Date.now() + 1).toString(), role: "assistant", text: "Connection hiccup! Give it another shot." },
-      ])
+      add("Connection hiccup. Give it another go.")
     } finally {
       setLoading(false)
     }
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
-    }
-  }
-
   return (
     <>
-      {/* Notification bubble */}
-      {showBubble && !open && (
-        <button
-          onClick={handleOpen}
-          className="fixed bottom-24 right-8 z-50 max-w-xs animate-fade-in"
-        >
-          <div className="bg-card border border-primary/40 rounded-2xl rounded-br-sm px-4 py-3 shadow-lg shadow-primary/20">
-            <p className="text-sm text-foreground">
-              Got an app idea? Let&apos;s talk!
-            </p>
-          </div>
+      {bubble && !open && (
+        <button className="chat-bubble" onClick={openChat}>
+          Got an app idea? Let&apos;s talk!
         </button>
       )}
-
-      {/* Chat toggle button */}
       <button
-        onClick={() => (open ? setOpen(false) : handleOpen())}
-        className="fixed bottom-8 right-8 z-50 w-14 h-14 bg-gradient-to-br from-primary to-secondary text-primary-foreground rounded-full shadow-lg shadow-primary/50 hover:shadow-xl hover:shadow-primary/60 transition-all duration-300 flex items-center justify-center text-xl"
+        className="chat-fab"
+        onClick={() => (open ? setOpen(false) : openChat())}
         aria-label={open ? "Close chat" : "Open chat"}
+        aria-expanded={open}
       >
-        {open ? "✕" : "💬"}
+        {open ? "✕" : "Hi"}
       </button>
-
-      {/* Chat window */}
       {open && (
-        <div className="fixed z-50 flex flex-col bg-background border border-primary/30 rounded-2xl shadow-2xl shadow-primary/20 overflow-hidden animate-fade-in inset-x-3 top-3 bottom-24 sm:inset-x-auto sm:top-auto sm:right-8 sm:bottom-24 sm:w-[360px] sm:h-[500px] sm:max-h-[calc(100vh-8rem)]">
-          {/* Header */}
-          <div className="px-4 py-3 bg-gradient-to-r from-primary/20 to-secondary/20 border-b border-primary/30 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-foreground text-sm font-bold">
-              H
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">Hassan&apos;s AI Rep</p>
-              <p className="text-xs text-foreground/50">Typically replies instantly</p>
+        <div className="chat-win" role="dialog" aria-label="Chat with Hassan's assistant">
+          <div className="chat-head">
+            <div className="av">H</div>
+            <div>
+              <b>Hassan&apos;s assistant</b>
+              <small>AI · replies instantly</small>
             </div>
           </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-relaxed ${
-                    msg.role === "user"
-                      ? "bg-primary/20 text-foreground rounded-br-sm"
-                      : "bg-card border border-primary/20 text-foreground rounded-bl-sm"
-                  }`}
-                >
-                  {msg.text}
-                </div>
+          <div className="chat-log" aria-live="polite">
+            {messages.map((m) => (
+              <div key={m.id} className={`msg ${m.role === "user" ? "me" : "bot"}`}>
+                {m.text}
               </div>
             ))}
             {loading && (
-              <div className="flex justify-start">
-                <div className="bg-card border border-primary/20 text-foreground rounded-2xl rounded-bl-sm px-3 py-2 text-sm">
-                  <span className="inline-flex gap-1">
-                    <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                  </span>
-                </div>
+              <div className="msg bot dots" aria-label="Typing">
+                <span />
+                <span />
+                <span />
               </div>
             )}
-            <div ref={messagesEndRef} />
+            <div ref={end} />
           </div>
-
-          {/* Input */}
-          <div className="px-3 py-3 border-t border-primary/20">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                disabled={loading}
-                placeholder="Type a message..."
-                enterKeyHint="send"
-                className="flex-1 min-w-0 px-3 py-2 bg-card border border-primary/30 rounded-xl text-base sm:text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-primary transition-colors disabled:opacity-50"
-              />
-              <button
-                onClick={sendMessage}
-                disabled={loading || !input.trim()}
-                className="shrink-0 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-primary/30 transition-all"
-              >
-                Send
-              </button>
-            </div>
-          </div>
+          <form
+            className="chat-in"
+            onSubmit={(e) => {
+              e.preventDefault()
+              send()
+            }}
+          >
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type a message…"
+              maxLength={1000}
+              disabled={loading}
+              aria-label="Your message"
+              enterKeyHint="send"
+            />
+            <button type="submit" disabled={loading || !input.trim()}>
+              Send
+            </button>
+          </form>
         </div>
       )}
     </>

@@ -1,24 +1,45 @@
-"use client"
+import PhoneFan from "@/components/phone-fan"
+import Marquee from "@/components/marquee"
 
 export default function Hero() {
-
   return (
-    <section id="home" className="relative flex items-center justify-start px-4 pt-12 pb-12">
-      <div className="max-w-6xl mx-auto text-left animate-blur-in">
-        <div className="space-y-4 md:space-y-6">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight animate-slide-in-left" style={{ fontFamily: "var(--font-poppins), var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-            <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient-shift">
-              Let's launch pixel perfect mobile apps
+    <section className="hero" aria-labelledby="hero-title">
+      <div className="grid-bg" />
+      <div className="hero-in">
+        <div>
+          <div className="eyebrow">Full stack mobile engineer</div>
+          <h1 className="hero-title" id="hero-title">
+            <span className="l">
+              <span>I build the app,</span>
+            </span>
+            <span className="l">
+              <span>the API, and the</span>
+            </span>
+            <span className="l">
+              <span className="und">
+                App Store
+                <svg viewBox="0 0 400 20" preserveAspectRatio="none" aria-hidden="true">
+                  <path d="M4 12 C 60 2, 110 18, 180 9 S 320 4, 396 11" />
+                </svg>
+              </span>{" "}
+              <span>release.</span>
             </span>
           </h1>
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-foreground/90">
-            in <span className="line-through text-foreground/40">months</span>{" "}
-            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-extrabold">
-              just days
-            </span>
-          </h2>
+          <p className="sub">
+            One engineer for the whole product. Flutter on the phone, Laravel or Node behind it, shipped to both stores.
+          </p>
+          <div className="cta">
+            <a className="btn solid" href="#contact">
+              Start a project <span className="ar">→</span>
+            </a>
+            <a className="btn line" href="#work">
+              See the apps <span className="ar">↓</span>
+            </a>
+          </div>
         </div>
+        <PhoneFan />
       </div>
+      <Marquee />
     </section>
   )
 }

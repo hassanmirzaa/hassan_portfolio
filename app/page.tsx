@@ -1,58 +1,33 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import Navbar from "@/components/navbar"
+import SiteHeader from "@/components/site-header"
 import Hero from "@/components/hero"
-import Services from "@/components/services"
+import Work from "@/components/work"
 import Process from "@/components/process"
-import ProjectsCarousel from "@/components/projects-carousel"
-import HeroStats from "@/components/hero-stats"
 import About from "@/components/about"
-import Experience from "@/components/experience"
-import Testimonials from "@/components/testimonials"
-import Blogs from "@/components/blogs"
-import FAQ from "@/components/faq"
+import Stack from "@/components/stack"
+import BlogSection from "@/components/blog-section"
 import Contact from "@/components/contact"
-import FloatingCTA from "@/components/floating-cta"
 import Chatbot from "@/components/chatbot"
-import ProgressBar from "@/components/progress-bar"
-import BackgroundAnimation from "@/components/background-animation"
-import CursorGlow from "@/components/cursor-glow"
+import { getProjects } from "@/lib/projects"
+import { getBlogs } from "@/lib/blogs"
+import { getSettings } from "@/lib/settings"
 
-export default function Home() {
-  const [scrollProgress, setScrollProgress] = useState(0)
+export const revalidate = 60
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight
-      const scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0
-      setScrollProgress(scrollPercent)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
+export default async function Home() {
+  const [projects, blogs, settings] = await Promise.all([getProjects(), getBlogs(3), getSettings()])
   return (
-    <main className="min-h-screen bg-background text-foreground overflow-hidden relative">
-      <CursorGlow />
-      <BackgroundAnimation />
-      <ProgressBar progress={scrollProgress} />
-      <Navbar />
-      <Hero />
-      <ProjectsCarousel />
-      <HeroStats />
-      <Testimonials />
-      <Services />
-      <Process />
-      <About />
-      <Experience />
-      <Blogs />
-      <FAQ />
-      <Contact />
-      <FloatingCTA />
+    <>
+      <SiteHeader settings={settings} home />
+      <main id="main">
+        <Hero />
+        <Work projects={projects} />
+        <Process />
+        <About />
+        <Stack />
+        <BlogSection blogs={blogs} />
+        <Contact settings={settings} />
+      </main>
       <Chatbot />
-    </main>
+    </>
   )
 }

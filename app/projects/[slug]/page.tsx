@@ -2,180 +2,145 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { getProjectBySlug, getProjectSlugs, type Project } from "@/lib/projects"
-import Navbar from "@/components/navbar"
+import SiteHeader from "@/components/site-header"
+import Contact from "@/components/contact"
+import Chatbot from "@/components/chatbot"
+import { getProjectBySlug, getProjects, type Screen } from "@/lib/projects"
+import { getSettings } from "@/lib/settings"
+import { SITE_URL } from "@/lib/site"
+
+export const revalidate = 60
 
 type Props = { params: Promise<{ slug: string }> }
 
-// Always fetch fresh project data so demo_video and other Supabase updates show without redeploy
-export const dynamic = "force-dynamic"
-
 export async function generateStaticParams() {
-  const slugs = await getProjectSlugs()
-  return slugs.map((slug) => ({ slug }))
+  return (await getProjects()).map((p) => ({ slug: p.slug }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const project = await getProjectBySlug(slug)
-  if (!project) return { title: "Project Not Found" }
+  const p = await getProjectBySlug(slug)
+  if (!p) return { title: "Project not found" }
   return {
-    title: `${project.title} | Hassan Mirza`,
-    description: project.longDescription ?? project.description,
+    title: p.title,
+    description: p.summary,
+    alternates: { canonical: `/projects/${p.slug}` },
+    openGraph: { title: `${p.title} · Hassan Mirza`, description: p.summary, url: `${SITE_URL}/projects/${p.slug}` },
   }
 }
 
-export default async function ProjectDetailPage({ params }: Props) {
-  const { slug } = await params
-  const project = await getProjectBySlug(slug)
-  if (!project) notFound()
+const STATUS = { live: "Live", in_development: "In development", archived: "Archived" } as const
 
-  const body = project.longDescription ?? project.description
+export default async function ProjectPage({ params }: Props) {
+  const { slug } = await params
+  const [all, settings] = await Promise.all([getProjects(), getSettings()])
+  const idx = all.findIndex((p) => p.slug === slug)
+  if (idx === -1) notFound()
+  const p = all[idx]
+  const next = all[(idx + 1) % all.length]
+
+  const screens: Screen[] = p.screens.length ? p.screens.slice(0, 4) : p.image ? [{ url: p.image, alt: `${p.title} app screen` }] : []
+  const sections = [
+    ["The brief", p.problem],
+    ["The build", p.approach],
+    ["The result", p.outcome],
+  ].filter((s): s is [string, string] => Boolean(s[1]))
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Navbar />
-      <article className="pt-24 pb-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Back link */}
-          <Link
-            href="/#projects-carousel"
-            className="inline-flex items-center gap-2 text-primary/80 hover:text-primary text-sm font-medium mb-8 transition-colors"
-          >
-            <span aria-hidden>←</span> Back to Projects
+    <>
+      <SiteHeader settings={settings} />
+      <main id="main">
+        <div className="wrap page-top">
+          <Link className="back" href="/#work">
+            ← All apps
           </Link>
+          <h1 className="case-title">{p.title}</h1>
+          <p className="case-sum">{p.summary}</p>
 
-          {/* Hero image */}
-          <div className="relative w-full aspect-video rounded-xl border border-primary/30 overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20 mb-8">
-            <Image
-              src={project.image}
-              alt={project.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 896px"
-              priority
-            />
-          </div>
-
-          {/* Meta row */}
-          <div className="flex flex-wrap items-center gap-3 mb-6">
-            {project.year && (
-              <span className="text-foreground/60 text-sm">{project.year}</span>
-            )}
-            {project.category && (
-              <>
-                <span className="text-foreground/40">•</span>
-                <span className="text-foreground/60 text-sm">{project.category}</span>
-              </>
-            )}
-            {project.rating != null && (
-              <>
-                <span className="text-foreground/40">•</span>
-                <span className="text-sm text-foreground/80">
-                  <span className="text-yellow-400">⭐</span> {project.rating}
-                </span>
-              </>
-            )}
-          </div>
-
-          {/* Title */}
-          <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">
-            {project.title}
-          </h1>
-
-          {/* Metrics badge */}
-          <div className="mb-6">
-            <span className="px-4 py-2 bg-secondary/20 text-secondary rounded-full text-sm font-semibold border border-secondary/40">
-              {project.metrics}
-            </span>
-          </div>
-
-          {/* Full description */}
-          <div className="prose prose-invert prose-primary max-w-none mb-10">
-            <p className="text-foreground/80 leading-relaxed text-lg whitespace-pre-line">
-              {body}
-            </p>
-          </div>
-
-          {/* Demo Video */}
-          {project.demoVideo && (
-            <section className="mb-10">
-              <h2 className="text-xl font-semibold text-foreground mb-3">Demo</h2>
-              <div className="relative w-full aspect-video rounded-xl border border-primary/30 overflow-hidden bg-black">
-                <video
-                  src={project.demoVideo}
-                  controls
-                  className="w-full h-full object-contain"
-                  preload="metadata"
-                  playsInline
-                >
-                  Your browser does not support the video tag.
-                </video>
+          <div className="meta">
+            <div>
+              <b>Role</b>
+              {p.role ?? "Design, app and backend"}
+            </div>
+            {p.year && (
+              <div>
+                <b>Year</b>
+                {p.year}
               </div>
-              <a
-                href={project.demoVideo}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-block text-sm text-primary/80 hover:text-primary"
-              >
-                Open video in new tab →
-              </a>
-            </section>
-          )}
+            )}
+            <div>
+              <b>Status</b>
+              {STATUS[p.status]}
+            </div>
+            <div>
+              <b>Links</b>
+              {[
+                [p.playStoreUrl, "Google Play ↗"],
+                [p.appStoreUrl, "App Store ↗"],
+                [p.liveUrl, "Live site ↗"],
+                [p.githubUrl, "GitHub ↗"],
+              ].some(([u]) => u) ? (
+                [
+                  [p.playStoreUrl, "Google Play ↗"],
+                  [p.appStoreUrl, "App Store ↗"],
+                  [p.liveUrl, "Live site ↗"],
+                  [p.githubUrl, "GitHub ↗"],
+                ].map(([u, l]) =>
+                  u ? (
+                    <a key={l} href={u} target="_blank" rel="noopener noreferrer">
+                      {l}
+                    </a>
+                  ) : null,
+                )
+              ) : (
+                <>Private, internal app</>
+              )}
+            </div>
+          </div>
 
-          {/* Screenshots */}
-          {project.screenshots && project.screenshots.length > 0 && (
-            <section className="mb-10">
-              <h2 className="text-xl font-semibold text-foreground mb-3">Screenshots</h2>
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {project.screenshots.map((src, i) => (
-                  <div key={i} className="relative w-56 h-[400px] flex-shrink-0 rounded-xl border border-primary/30 overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10">
-                    <Image src={src} alt={`${project.title} screenshot ${i + 1}`} fill className="object-cover" sizes="224px" />
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Tech stack */}
-          <section className="mb-10">
-            <h2 className="text-xl font-semibold text-foreground mb-3">Tech Stack</h2>
-            <div className="flex flex-wrap gap-2">
-              {project.tech.map((tech, i) => (
-                <span
-                  key={i}
-                  className="px-3 py-1.5 bg-primary/20 text-primary rounded-lg text-sm border border-primary/40"
-                >
-                  {tech}
-                </span>
+          {screens.length > 0 && (
+            <div className="case-stage" style={{ ["--accent" as string]: p.accent }}>
+              {screens.map((s, i) => (
+                <div className="phone" key={s.url + i}>
+                  <Image className="shot" src={s.url} alt={s.alt ?? s.caption ?? `${p.title} screen ${i + 1}`} width={923} height={2000} sizes="(max-width: 760px) 44vw, 270px" priority={i === 0} />
+                </div>
               ))}
             </div>
-          </section>
+          )}
 
-          {/* CTA */}
-          <div className="flex flex-wrap gap-3 pt-4 border-t border-primary/20">
-            {project.playStoreUrl && (
-              <a
-                href={project.playStoreUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary/20 text-primary rounded-lg font-medium hover:bg-primary/30 transition-colors border border-primary/40"
-              >
-                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
-                  <path d="M3.609 1.814 13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92ZM14.852 13.06l2.36 2.36-9.676 5.497 7.316-7.856ZM18.44 10.18l2.883 1.638a1 1 0 0 1 0 1.738l-2.882 1.637L15.667 12l2.774-1.82ZM7.536 3.083l9.676 5.498-2.36 2.36-7.316-7.858Z" />
-                </svg>
-                View on Play Store
-              </a>
-            )}
-            <Link
-              href="/#contact"
-              className="px-6 py-3 border border-primary/40 text-primary rounded-lg font-medium hover:bg-primary/10 transition-colors"
-            >
-              Get in touch
-            </Link>
+          <div className="case-body">
+            <h2>About this app</h2>
+            <p>{p.description}</p>
           </div>
+          {sections.map(([t, body]) => (
+            <div className="case-body" key={t}>
+              <h2>{t}</h2>
+              <p>{body}</p>
+            </div>
+          ))}
+          {p.tech.length > 0 && (
+            <div className="case-body">
+              <h2>Built with</h2>
+              <ul className="stack-tags" style={{ padding: 0 }}>
+                {p.tech.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
-      </article>
-    </main>
+
+        {next && next.slug !== p.slug && (
+          <Link href={`/projects/${next.slug}`} className="next">
+            <div className="wrap">
+              <small>Next app →</small>
+              <div className="t">{next.title}</div>
+            </div>
+          </Link>
+        )}
+        <Contact settings={settings} />
+      </main>
+      <Chatbot />
+    </>
   )
 }
