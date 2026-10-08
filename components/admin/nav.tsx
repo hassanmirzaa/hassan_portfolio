@@ -6,12 +6,13 @@ import { usePathname } from "next/navigation"
 const ITEMS = [
   ["/admin", "Overview"],
   ["/admin/projects", "Projects"],
-  ["/admin/blogs", "Blog posts"],
   ["/admin/leads", "Leads"],
+  ["/admin/blogs", "Blog posts"],
   ["/admin/settings", "Site settings"],
+  ["/admin/account", "Account"],
 ]
 
-export default function AdminNav() {
+export default function AdminNav({ newLeads = 0 }: { newLeads?: number }) {
   const path = usePathname()
   return (
     <>
@@ -20,6 +21,7 @@ export default function AdminNav() {
         return (
           <Link key={href} href={href} className={`nav${on ? " on" : ""}`} aria-current={on ? "page" : undefined}>
             {label}
+            {href === "/admin/leads" && newLeads > 0 && <span className="badge" aria-label={`${newLeads} new`}>{newLeads}</span>}
           </Link>
         )
       })}

@@ -7,11 +7,14 @@ export default async function EditProject({ params }: { params: Promise<{ id: st
   const { supabase } = await requireAdmin()
   const { data } = await supabase.from("projects").select("*").eq("id", id).maybeSingle()
   if (!data) notFound()
+  const screens = Array.isArray(data.screens) && data.screens.length ? data.screens : (data.screenshots ?? []).map((url: string) => ({ url }))
   const p: ProjectData = {
     ...data,
-    // The site shows one text. Edit the long version if the old row had one.
-    description: data.long_description || data.description,
-    screens: Array.isArray(data.screens) && data.screens.length ? data.screens : (data.screenshots ?? []).map((url: string) => ({ url })),
+    description: data.description || data.long_description,
+    screens: screens.length ? screens : data.cover_image ? [{ url: data.cover_image }] : [],
+    features: Array.isArray(data.features) ? data.features : [],
+    highlights: Array.isArray(data.highlights) ? data.highlights : [],
+    platforms: Array.isArray(data.platforms) ? data.platforms : [],
   }
   return (
     <>

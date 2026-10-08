@@ -7,7 +7,7 @@ export default async function NewProject() {
     <>
       <h1>New project</h1>
       <p className="lead">New projects start as drafts. Tick Published when it's ready.</p>
-      <ProjectForm p={{}} />
+      <ProjectForm p={{ sort_order: 999 }} />
     </>
   )
 }

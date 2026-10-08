@@ -1,8 +1,18 @@
 "use client"
 
-import { useActionState, useState, useTransition } from "react"
-import { login, saveProject, saveBlog, saveSettings, updateLead, deleteLead, deleteProject, deleteBlog, togglePublish, type ActionState } from "@/app/admin/actions"
+import { startTransition, useActionState, useState, useTransition } from "react"
+import { login, saveProject, saveBlog, saveSettings, updateLead, deleteLead, deleteProject, deleteBlog, togglePublish, moveProject, duplicateProject, changePassword, type ActionState } from "@/app/admin/actions"
+import { ScreensEditor, FeaturesEditor, HighlightsEditor } from "@/components/admin/editors"
 import type { SiteSettings } from "@/lib/settings"
+
+
+// React 19 clears an uncontrolled form after every action, even a failed one, which would wipe everything you typed.
+// Submitting through a transition keeps the fields as they are so an error never costs you your work.
+const submitWith = (action: (fd: FormData) => void) => (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault()
+  const fd = new FormData(e.currentTarget)
+  startTransition(() => action(fd))
+}
 
 function Msg({ s }: { s: ActionState }) {
   if (!s) return null
@@ -14,7 +24,7 @@ function Msg({ s }: { s: ActionState }) {
 export function LoginForm({ note }: { note?: string }) {
   const [state, action, pending] = useActionState(login, undefined)
   return (
-    <form action={action}>
+    <form onSubmit={submitWith(action)}>
       <h1>Admin</h1>
       {note && <div className="msg-err" role="alert">{note}</div>}
       <Msg s={state} />
@@ -67,109 +77,107 @@ export type ProjectData = {
 export function ProjectForm({ p }: { p: ProjectData }) {
   const [state, action, pending] = useActionState(saveProject.bind(null, p.id ?? null), undefined)
   const [color, setColor] = useState(p.accent_color ?? "#17403A")
+  const folder = p.slug || "new"
   return (
-    <form className="af" action={action}>
+    <form className="af" onSubmit={submitWith(action)}>
       <Msg s={state} />
-      <div className="two">
-        <div><label htmlFor="title">Title</label><input id="title" name="title" type="text" defaultValue={p.title} required /></div>
-        <div><label htmlFor="slug">Slug (URL)</label><input id="slug" name="slug" type="text" defaultValue={p.slug} placeholder="auto from title" /></div>
-      </div>
-      <div>
-        <label htmlFor="summary">One-line summary (shown in the work list)</label>
-        <input id="summary" name="summary" type="text" maxLength={160} defaultValue={p.summary ?? ""} />
-      </div>
-      <div className="two">
-        <div><label htmlFor="client">Client / company it was built for</label><input id="client" name="client" type="text" defaultValue={p.client ?? ""} placeholder="Waterverse" /></div>
+
+      <fieldset>
+        <legend>1 · BASICS</legend>
+        <div className="two">
+          <div><label htmlFor="title">Title</label><input id="title" name="title" type="text" defaultValue={p.title} required /></div>
+          <div><label htmlFor="slug">Slug (the URL)</label><input id="slug" name="slug" type="text" defaultValue={p.slug} placeholder="auto from title" /></div>
+        </div>
         <div>
-          <span className="lbl2">Platforms</span>
-          <div className="checks" style={{ paddingTop: 8 }}>
-            {[["ios", "iOS"], ["android", "Android"], ["web", "Web"]].map(([v, l]) => (
-              <label key={v}><input type="checkbox" name="platforms" value={v} defaultChecked={(p.platforms ?? []).includes(v)} /> {l}</label>
-            ))}
+          <label htmlFor="summary">One-line summary (home list and sharing)</label>
+          <input id="summary" name="summary" type="text" maxLength={160} defaultValue={p.summary ?? ""} />
+        </div>
+        <div>
+          <label htmlFor="description">About this app (the paragraph on the home card and top of the case study)</label>
+          <textarea id="description" name="description" defaultValue={p.description} required />
+        </div>
+        <div className="two">
+          <div><label htmlFor="client">Client / company</label><input id="client" name="client" type="text" defaultValue={p.client ?? ""} placeholder="Waterverse" /></div>
+          <div><label htmlFor="role">Your role</label><input id="role" name="role" type="text" defaultValue={p.role ?? ""} placeholder="Flutter app and Laravel API" /></div>
+        </div>
+        <div className="three">
+          <div><label htmlFor="year">Year</label><input id="year" name="year" type="text" defaultValue={p.year ?? ""} /></div>
+          <div>
+            <label htmlFor="status">Status</label>
+            <select id="status" name="status" defaultValue={p.status ?? "live"}>
+              <option value="live">Live</option><option value="in_development">In development</option><option value="archived">Archived</option>
+            </select>
+          </div>
+          <div>
+            <span className="lbl2">Platforms</span>
+            <div className="checks" style={{ paddingTop: 8 }}>
+              {[["ios", "iOS"], ["android", "Android"], ["web", "Web"]].map(([v, l]) => (
+                <label key={v}><input type="checkbox" name="platforms" value={v} defaultChecked={(p.platforms ?? []).includes(v)} /> {l}</label>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-      <div>
-        <label htmlFor="description">About this app</label>
-        <textarea id="description" name="description" defaultValue={p.description} required />
-      </div>
-      <fieldset>
-        <legend>FEATURES AND NUMBERS (shown as cards and chips on the site)</legend>
         <div>
-          <label htmlFor="features">Features, one per line: Title | what it does</label>
-          <textarea id="features" name="features" style={{ minHeight: 190 }} defaultValue={(p.features ?? []).map((f) => (f.text ? `${f.title} | ${f.text}` : f.title)).join("\n")} placeholder={"Live order tracking | Customers follow the driver on a map\nPush reminders | ..."} />
-          <div className="hint">List everything the app can do. Clients like detail. The first five show as chips on the home page.</div>
-        </div>
-        <div>
-          <label htmlFor="highlights">Numbers, one per line: value | label (real numbers only)</label>
-          <textarea id="highlights" name="highlights" defaultValue={(p.highlights ?? []).map((h) => `${h.value} | ${h.label}`).join("\n")} placeholder={"1K+ | Downloads\n4.7 | Play Store rating"} />
+          <label htmlFor="tech_stack">Tech stack (comma separated)</label>
+          <input id="tech_stack" name="tech_stack" type="text" defaultValue={(p.tech_stack ?? []).join(", ")} placeholder="Flutter, Laravel, Firebase, Stripe" />
         </div>
       </fieldset>
+
       <fieldset>
-        <legend>CASE STUDY (optional, leave blank to hide a section)</legend>
-        <div><label htmlFor="role">Your role</label><input id="role" name="role" type="text" defaultValue={p.role ?? ""} placeholder="Flutter app and Laravel API" /></div>
+        <legend>2 · SCREENSHOTS</legend>
+        <ScreensEditor name="screens_json" initial={p.screens ?? []} folder={folder} />
+      </fieldset>
+
+      <fieldset>
+        <legend>3 · FEATURES (what the app can do. Clients read these.)</legend>
+        <FeaturesEditor name="features_json" initial={p.features ?? []} />
+        <div className="hint">The first five show as chips on the home page. All of them show as cards on the case study.</div>
+      </fieldset>
+
+      <fieldset>
+        <legend>4 · NUMBERS</legend>
+        <HighlightsEditor name="highlights_json" initial={p.highlights ?? []} />
+      </fieldset>
+
+      <fieldset>
+        <legend>5 · CASE STUDY (optional, blank sections are hidden)</legend>
         <div><label htmlFor="problem">The brief</label><textarea id="problem" name="problem" defaultValue={p.problem ?? ""} /></div>
         <div><label htmlFor="approach">The build (decisions and tradeoffs)</label><textarea id="approach" name="approach" defaultValue={p.approach ?? ""} /></div>
         <div><label htmlFor="outcome">The result (real numbers only)</label><textarea id="outcome" name="outcome" defaultValue={p.outcome ?? ""} /></div>
       </fieldset>
-      <div>
-        <label htmlFor="tech_stack">Tech stack (comma separated)</label>
-        <input id="tech_stack" name="tech_stack" type="text" defaultValue={(p.tech_stack ?? []).join(", ")} placeholder="Flutter, Laravel, Firebase" />
-      </div>
-      <div className="three">
-        <div><label htmlFor="year">Year</label><input id="year" name="year" type="text" defaultValue={p.year ?? ""} /></div>
-        <div>
-          <label htmlFor="status">Status</label>
-          <select id="status" name="status" defaultValue={p.status ?? "live"}>
-            <option value="live">Live</option><option value="in_development">In development</option><option value="archived">Archived</option>
-          </select>
-        </div>
-        <div><label htmlFor="sort_order">Order (0 = first)</label><input id="sort_order" name="sort_order" type="number" min={0} max={999} defaultValue={p.sort_order ?? 0} /></div>
-      </div>
-      <div className="two">
-        <div><label htmlFor="category">Category</label><input id="category" name="category" type="text" defaultValue={p.category ?? "Mobile App"} /></div>
-        <div>
-          <label htmlFor="accent_color">Hover card colour</label>
-          <div style={{ display: "flex", gap: 10 }}>
-            <input type="color" value={color} onChange={(e) => setColor(e.target.value)} aria-label="Pick colour" />
-            <input id="accent_color" name="accent_color" type="text" value={color} onChange={(e) => setColor(e.target.value)} />
-          </div>
-        </div>
-      </div>
+
       <fieldset>
-        <legend>IMAGES</legend>
-        <div>
-          <label htmlFor="cover_image">Cover screenshot URL</label>
-          <input id="cover_image" name="cover_image" type="text" defaultValue={p.cover_image ?? ""} placeholder="or upload below" />
-          <div className="hint">Portrait phone screenshot works best. A file below replaces this URL.</div>
-          {p.cover_image && <div className="thumbs" style={{ marginTop: 10 }}>{/* eslint-disable-next-line @next/next/no-img-element */}<img className="thumb" src={p.cover_image} alt="" /></div>}
-        </div>
-        <div><label htmlFor="cover_file">Upload cover</label><input id="cover_file" name="cover_file" type="file" accept="image/png,image/jpeg,image/webp,image/avif" /></div>
-        <div>
-          <label htmlFor="screens">Screens, one per line: URL | title | description</label>
-          <textarea id="screens" name="screens" defaultValue={(p.screens ?? []).map((s) => { const parts = [s.url, s.caption ?? "", s.text ?? ""]; while (parts.length > 1 && !parts[parts.length - 1]) parts.pop(); return parts.join(" | ") }).join("\n")} />
-        </div>
-        <div><label htmlFor="screen_files">Upload more screens (added to the list)</label><input id="screen_files" name="screen_files" type="file" multiple accept="image/png,image/jpeg,image/webp,image/avif" /></div>
-      </fieldset>
-      <fieldset>
-        <legend>LINKS</legend>
+        <legend>6 · LINKS AND LOOK</legend>
         <div className="two">
           <div><label htmlFor="play_store_url">Google Play</label><input id="play_store_url" name="play_store_url" type="url" defaultValue={p.play_store_url ?? ""} /></div>
           <div><label htmlFor="app_store_url">App Store</label><input id="app_store_url" name="app_store_url" type="url" defaultValue={p.app_store_url ?? ""} /></div>
           <div><label htmlFor="live_url">Live site</label><input id="live_url" name="live_url" type="url" defaultValue={p.live_url ?? ""} /></div>
           <div><label htmlFor="github_url">GitHub</label><input id="github_url" name="github_url" type="url" defaultValue={p.github_url ?? ""} /></div>
         </div>
-        <div><label htmlFor="demo_video">Demo video URL</label><input id="demo_video" name="demo_video" type="url" defaultValue={p.demo_video ?? ""} /></div>
-        <div><label htmlFor="metrics">Metric (e.g. downloads). Leave empty unless it is a real number.</label><input id="metrics" name="metrics" type="text" defaultValue={p.metrics ?? ""} /></div>
+        <div><label htmlFor="demo_video">Demo video (a link, or an .mp4 file URL to play on the page)</label><input id="demo_video" name="demo_video" type="url" defaultValue={p.demo_video ?? ""} /></div>
+        <div className="two">
+          <div>
+            <label htmlFor="accent_color">Card colour on the home page</label>
+            <div style={{ display: "flex", gap: 10 }}>
+              <input type="color" value={color} onChange={(e) => setColor(e.target.value)} aria-label="Pick colour" />
+              <input id="accent_color" name="accent_color" type="text" value={color} onChange={(e) => setColor(e.target.value)} />
+            </div>
+          </div>
+          <div><label htmlFor="sort_order">Order (use the arrows in the list instead)</label><input id="sort_order" name="sort_order" type="number" min={0} max={999} defaultValue={p.sort_order ?? 0} /></div>
+        </div>
+        <input type="hidden" name="category" value={p.category ?? "Mobile App"} />
+        <input type="hidden" name="metrics" value={p.metrics ?? ""} />
+        <div className="checks">
+          <label><input type="checkbox" name="is_published" defaultChecked={p.is_published ?? false} /> Published (visible on the site)</label>
+          <label><input type="checkbox" name="is_featured" defaultChecked={p.is_featured ?? true} /> Featured</label>
+          <label><input type="checkbox" name="is_confidential" defaultChecked={p.is_confidential ?? false} /> Confidential (screens contain real data)</label>
+        </div>
       </fieldset>
-      <div className="checks">
-        <label><input type="checkbox" name="is_published" defaultChecked={p.is_published ?? false} /> Published</label>
-        <label><input type="checkbox" name="is_featured" defaultChecked={p.is_featured ?? true} /> Featured</label>
-        <label><input type="checkbox" name="is_confidential" defaultChecked={p.is_confidential ?? false} /> Confidential (screens must be anonymised)</label>
-      </div>
-      <div className="row-actions">
+
+      <div className="savebar">
         <button className="b solid" disabled={pending}>{pending ? "Saving…" : "Save project"}</button>
         <a className="b" href="/admin/projects">Cancel</a>
+        {p.slug && p.is_published && <a className="b" href={`/projects/${p.slug}`} target="_blank" rel="noreferrer">View on site ↗</a>}
       </div>
     </form>
   )
@@ -180,7 +188,7 @@ export type BlogData = { id?: string; title?: string; slug?: string; content?: s
 export function BlogForm({ b }: { b: BlogData }) {
   const [state, action, pending] = useActionState(saveBlog.bind(null, b.id ?? null), undefined)
   return (
-    <form className="af" action={action}>
+    <form className="af" onSubmit={submitWith(action)}>
       <Msg s={state} />
       <div className="two">
         <div><label htmlFor="title">Title</label><input id="title" name="title" type="text" defaultValue={b.title} required /></div>
@@ -206,7 +214,7 @@ export function BlogForm({ b }: { b: BlogData }) {
 export function SettingsForm({ s }: { s: SiteSettings }) {
   const [state, action, pending] = useActionState(saveSettings, undefined)
   return (
-    <form className="af" action={action}>
+    <form className="af" onSubmit={submitWith(action)}>
       <Msg s={state} />
       <div><label htmlFor="contact_email">Contact email (shown on the site)</label><input id="contact_email" name="contact_email" type="email" defaultValue={s.email} required /></div>
       <div className="two">
@@ -254,18 +262,18 @@ export function LeadRow({ l }: { l: LeadData }) {
   const dirty = status !== l.status || notes !== (l.notes ?? "")
   return (
     <tr>
-      <td>
+      <td data-label="Who">
         <div className="t">{l.name}</div>
         <div className="sub">{new Date(l.created_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</div>
         <div className="sub">{l.source}{l.project_type ? ` · ${l.project_type}` : ""}</div>
       </td>
-      <td>
+      <td data-label="Contact">
         {l.email && <div><a href={`mailto:${l.email}`}>{l.email}</a></div>}
         {l.phone && <div className="sub">{l.phone}</div>}
         {l.call_date && <div className="sub">Call: {l.call_date} {l.call_time}</div>}
       </td>
-      <td style={{ maxWidth: 340, whiteSpace: "pre-wrap" }}>{l.message}</td>
-      <td style={{ minWidth: 190 }}>
+      <td data-label="Message" style={{ maxWidth: 340, whiteSpace: "pre-wrap" }}>{l.message}</td>
+      <td data-label="Follow-up" className="followup">
         <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status" style={{ width: "100%", border: "1.5px solid var(--ink)", borderRadius: 10, padding: 6, marginBottom: 6 }}>
           <option value="new">New</option><option value="contacted">Contacted</option><option value="won">Won</option><option value="lost">Lost</option>
         </select>
@@ -276,5 +284,32 @@ export function LeadRow({ l }: { l: LeadData }) {
         </div>
       </td>
     </tr>
+  )
+}
+
+export function MoveButtons({ id, first, last }: { id: string; first: boolean; last: boolean }) {
+  const [pending, start] = useTransition()
+  return (
+    <span className="row-actions" style={{ flexWrap: "nowrap" }}>
+      <button className="b sm" disabled={first || pending} onClick={() => start(() => moveProject(id, "up"))} aria-label="Move up">↑</button>
+      <button className="b sm" disabled={last || pending} onClick={() => start(() => moveProject(id, "down"))} aria-label="Move down">↓</button>
+    </span>
+  )
+}
+
+export function DuplicateProject({ id }: { id: string }) {
+  const [pending, start] = useTransition()
+  return <button className="b sm" disabled={pending} onClick={() => start(() => duplicateProject(id))}>{pending ? "…" : "Duplicate"}</button>
+}
+
+export function PasswordForm() {
+  const [state, action, pending] = useActionState(changePassword, undefined)
+  return (
+    <form className="af" onSubmit={submitWith(action)} style={{ maxWidth: 460 }}>
+      <Msg s={state} />
+      <div><label htmlFor="password">New password (10+ characters)</label><input id="password" name="password" type="password" autoComplete="new-password" minLength={10} required /></div>
+      <div><label htmlFor="again">Repeat it</label><input id="again" name="again" type="password" autoComplete="new-password" minLength={10} required /></div>
+      <div className="row-actions"><button className="b solid" disabled={pending}>{pending ? "Saving…" : "Change password"}</button></div>
+    </form>
   )
 }

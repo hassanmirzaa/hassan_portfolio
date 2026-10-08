@@ -9,10 +9,6 @@ import { isSupabaseConfigured } from "@/lib/supabase"
 
 export type ActionState = { ok?: boolean; error?: string } | undefined
 
-const BUCKET = "project-assets"
-const MAX_BYTES = 10 * 1024 * 1024
-const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/avif"]
-
 /* ───────── auth ───────── */
 
 export async function login(_: ActionState, form: FormData): Promise<ActionState> {
@@ -37,6 +33,17 @@ export async function logout() {
   redirect("/admin/login")
 }
 
+export async function changePassword(_: ActionState, form: FormData): Promise<ActionState> {
+  const { supabase } = await requireAdmin()
+  const next = String(form.get("password") ?? "")
+  const again = String(form.get("again") ?? "")
+  if (next.length < 10) return { error: "Use at least 10 characters." }
+  if (next !== again) return { error: "The two passwords don't match." }
+  const { error } = await supabase.auth.updateUser({ password: next })
+  if (error) return { error: error.message }
+  return { ok: true }
+}
+
 /* ───────── helpers ───────── */
 
 const text = (f: FormData, k: string) => {
@@ -55,17 +62,28 @@ const slugify = (s: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
 
-async function upload(supabase: Awaited<ReturnType<typeof createClient>>, file: File, folder: string) {
-  if (!IMAGE_TYPES.includes(file.type)) throw new Error(`${file.name}: only PNG, JPG, WebP or AVIF images.`)
-  if (file.size > MAX_BYTES) throw new Error(`${file.name}: larger than 10 MB.`)
-  const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg"
-  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file, { contentType: file.type, upsert: false })
-  if (error) throw new Error(`Upload failed: ${error.message}`)
-  return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
+function json<T>(f: FormData, k: string, schema: z.ZodType<T>, fallback: T): T {
+  try {
+    const parsed = schema.safeParse(JSON.parse(String(f.get(k) ?? "[]")))
+    return parsed.success ? parsed.data : fallback
+  } catch {
+    return fallback
+  }
 }
 
-const files = (f: FormData, k: string) => f.getAll(k).filter((x): x is File => x instanceof File && x.size > 0)
+const clean = (s: string | undefined) => (s && s.trim() ? s.trim() : undefined)
+
+const screensSchema = z
+  .array(
+    z.object({
+      url: z.string().regex(/^https?:\/\/|^\//, "Screen URLs must start with https:// or /"),
+      caption: z.string().max(80).optional(),
+      text: z.string().max(400).optional(),
+    }),
+  )
+  .max(30)
+const featuresSchema = z.array(z.object({ title: z.string().min(1).max(120), text: z.string().max(500).optional() })).max(40)
+const highlightsSchema = z.array(z.object({ value: z.string().min(1).max(20), label: z.string().min(1).max(60) })).max(8)
 
 /* ───────── projects ───────── */
 
@@ -95,76 +113,39 @@ export async function saveProject(id: string | null, _: ActionState, form: FormD
   })
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-  try {
-    let cover_image = text(form, "cover_image")
-    const cover = files(form, "cover_file")[0]
-    if (cover) cover_image = await upload(supabase, cover, "covers")
+  const screens = json(form, "screens_json", screensSchema, []).map((s) => ({ url: s.url, caption: clean(s.caption), text: clean(s.text) }))
+  const features = json(form, "features_json", featuresSchema, []).map((f) => ({ title: f.title.trim(), text: clean(f.text) }))
+  const highlights = json(form, "highlights_json", highlightsSchema, [])
+  const platforms = form.getAll("platforms").map(String).filter((x) => ["ios", "android", "web"].includes(x))
 
-    // Screens: one per line, "url | title | description". Title and description are optional.
-    const screens = String(form.get("screens") ?? "")
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean)
-      .map((l) => {
-        const [url, caption, ...text] = l.split("|").map((x) => x.trim())
-        return { url, caption: caption || undefined, text: text.join(" | ") || undefined }
-      })
-      .filter((x) => /^https?:\/\/|^\//.test(x.url))
-    for (const f of files(form, "screen_files")) screens.push({ url: await upload(supabase, f, "screens"), caption: undefined, text: undefined })
-
-    // Features: one per line, "Title | description".
-    const features = String(form.get("features") ?? "")
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean)
-      .map((l) => {
-        const [title, ...text] = l.split("|").map((x) => x.trim())
-        return { title, text: text.join(" | ") || undefined }
-      })
-      .filter((x) => x.title)
-
-    // Highlights: one per line, "value | label". Real numbers only.
-    const highlights = String(form.get("highlights") ?? "")
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean)
-      .map((l) => {
-        const [value, ...label] = l.split("|").map((x) => x.trim())
-        return { value, label: label.join(" | ") }
-      })
-      .filter((x) => x.value && x.label)
-
-    const platforms = form.getAll("platforms").map(String).filter((x) => ["ios", "android", "web"].includes(x))
-
-    const row = {
-      ...parsed.data,
-      cover_image,
-      screens,
-      features,
-      highlights,
-      platforms,
-      client: text(form, "client"),
-      role: text(form, "role"),
-      problem: text(form, "problem"),
-      approach: text(form, "approach"),
-      outcome: text(form, "outcome"),
-      metrics: text(form, "metrics"),
-      category: text(form, "category") ?? "Mobile App",
-      tech_stack: list(form, "tech_stack"),
-      play_store_url: text(form, "play_store_url"),
-      app_store_url: text(form, "app_store_url"),
-      github_url: text(form, "github_url"),
-      live_url: text(form, "live_url"),
-      demo_video: text(form, "demo_video"),
-      is_confidential: bool(form, "is_confidential"),
-      is_featured: bool(form, "is_featured"),
-      is_published: bool(form, "is_published"),
-    }
-    const q = id ? supabase.from("projects").update(row).eq("id", id) : supabase.from("projects").insert(row)
-    const { error } = await q
-    if (error) return { error: error.code === "23505" ? "That slug is already used by another project." : error.message }
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : "Something went wrong." }
+  const row = {
+    ...parsed.data,
+    screens,
+    features,
+    highlights,
+    platforms,
+    client: text(form, "client"),
+    role: text(form, "role"),
+    problem: text(form, "problem"),
+    approach: text(form, "approach"),
+    outcome: text(form, "outcome"),
+    metrics: text(form, "metrics"),
+    category: text(form, "category") ?? "Mobile App",
+    tech_stack: list(form, "tech_stack"),
+    play_store_url: text(form, "play_store_url"),
+    app_store_url: text(form, "app_store_url"),
+    github_url: text(form, "github_url"),
+    live_url: text(form, "live_url"),
+    demo_video: text(form, "demo_video"),
+    is_confidential: bool(form, "is_confidential"),
+    is_featured: bool(form, "is_featured"),
+    is_published: bool(form, "is_published"),
+  }
+  const { error } = id ? await supabase.from("projects").update(row).eq("id", id) : await supabase.from("projects").insert(row)
+  if (error) {
+    if (error.code === "23505") return { error: "That slug is already used by another project." }
+    if (/column .* does not exist|schema cache/i.test(error.message)) return { error: "The database is missing the new project columns. Run supabase/10_project_details.sql in the SQL editor first." }
+    return { error: error.message }
   }
   revalidatePath("/")
   revalidatePath(`/projects/${parsed.data.slug}`)
@@ -175,6 +156,36 @@ export async function deleteProject(id: string) {
   const { supabase } = await requireAdmin()
   await supabase.from("projects").delete().eq("id", id)
   revalidatePath("/")
+  revalidatePath("/admin/projects")
+}
+
+/** Swap a project with its neighbour in the display order, then renumber 1..n so orders stay unique. */
+export async function moveProject(id: string, dir: "up" | "down") {
+  const { supabase } = await requireAdmin()
+  const { data } = await supabase.from("projects").select("id,sort_order,created_at").order("sort_order", { ascending: true }).order("created_at", { ascending: true })
+  const rows = data ?? []
+  const i = rows.findIndex((r) => r.id === id)
+  const j = dir === "up" ? i - 1 : i + 1
+  if (i < 0 || j < 0 || j >= rows.length) return
+  ;[rows[i], rows[j]] = [rows[j], rows[i]]
+  await Promise.all(
+    rows.map((r, k) => (r.sort_order === k + 1 ? null : supabase.from("projects").update({ sort_order: k + 1 }).eq("id", r.id))),
+  )
+  revalidatePath("/")
+  revalidatePath("/admin/projects")
+}
+
+export async function duplicateProject(id: string) {
+  const { supabase } = await requireAdmin()
+  const { data: src } = await supabase.from("projects").select("*").eq("id", id).maybeSingle()
+  if (!src) return
+  const { data: existing } = await supabase.from("projects").select("slug")
+  const taken = new Set((existing ?? []).map((r) => r.slug as string))
+  let n = 1
+  let slug = `${src.slug}-copy`
+  while (taken.has(slug)) slug = `${src.slug}-copy-${++n}`
+  const { id: _id, created_at: _c, updated_at: _u, ...rest } = src
+  await supabase.from("projects").insert({ ...rest, slug, title: `${src.title} (copy)`, is_published: false, sort_order: 999 })
   revalidatePath("/admin/projects")
 }
 
@@ -235,15 +246,13 @@ export async function updateLead(id: number, status: string, notes: string) {
     .from("portfolio_leads")
     .update({ status, notes: notes.trim() || null, handled_at: status === "new" ? null : new Date().toISOString() })
     .eq("id", id)
-  revalidatePath("/admin/leads")
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
 }
 
 export async function deleteLead(id: number) {
   const { supabase } = await requireAdmin()
   await supabase.from("portfolio_leads").delete().eq("id", id)
-  revalidatePath("/admin/leads")
-  revalidatePath("/admin")
+  revalidatePath("/admin", "layout")
 }
 
 /* ───────── settings ───────── */

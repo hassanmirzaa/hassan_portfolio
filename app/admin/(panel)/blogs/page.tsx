@@ -14,16 +14,16 @@ export default async function BlogsAdmin() {
         </div>
         <Link className="b solid" href="/admin/blogs/new">+ New post</Link>
       </div>
-      <table className="tbl">
+      <table className="tbl stack">
         <thead><tr><th>POST</th><th>CATEGORY</th><th>DATE</th><th>VISIBILITY</th><th /></tr></thead>
         <tbody>
           {(blogs ?? []).map((b) => (
             <tr key={b.id}>
-              <td><div className="t">{b.title}</div><div className="sub">/blog/{b.slug}</div></td>
-              <td>{b.category}</td>
-              <td>{b.published_at ? new Date(b.published_at).toLocaleDateString("en-GB") : "—"}</td>
-              <td><PublishToggle table="blogs" id={b.id} on={b.is_published} /></td>
-              <td><div className="row-actions"><Link className="b sm" href={`/admin/blogs/${b.id}`}>Edit</Link><DeleteBlog id={b.id} title={b.title} /></div></td>
+              <td data-label="Post"><div className="t">{b.title}</div><div className="sub">/blog/{b.slug}</div></td>
+              <td data-label="Category">{b.category}</td>
+              <td data-label="Date">{b.published_at ? new Date(b.published_at).toLocaleDateString("en-GB") : "—"}</td>
+              <td data-label="Visibility"><PublishToggle table="blogs" id={b.id} on={b.is_published} /></td>
+              <td data-label=""><div className="row-actions"><Link className="b sm" href={`/admin/blogs/${b.id}`}>Edit</Link><DeleteBlog id={b.id} title={b.title} /></div></td>
             </tr>
           ))}
         </tbody>
