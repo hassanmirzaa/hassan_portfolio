@@ -2,7 +2,7 @@ const COLS = [
   { t: "Mobile", i: ["Flutter", "Dart", "Riverpod", "Bloc"] },
   { t: "Backend", i: ["Laravel", "Node.js", "Express", "REST APIs"] },
   { t: "Data", i: ["MySQL", "PostgreSQL", "Firebase", "Supabase"] },
-  { t: "Release and revenue", i: ["App Store", "Play Store", "Google Ads", "Stripe"] },
+  { t: "Release and revenue", i: ["App Store", "Play Store", "Google AdMob", "Stripe"] },
 ]
 
 export default function Stack() {

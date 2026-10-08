@@ -1,4 +1,4 @@
-const WORDS = ["Flutter", "Dart", "Laravel", "Node.js", "Firebase", "Supabase", "MySQL", "PostgreSQL", "Riverpod", "OpenAI", "Stripe", "Google Ads", "App Store", "Play Store"]
+const WORDS = ["Flutter", "Dart", "Laravel", "Node.js", "Firebase", "Supabase", "MySQL", "PostgreSQL", "Riverpod", "OpenAI", "Stripe", "Google AdMob", "App Store", "Play Store"]
 
 export default function Marquee() {
   return (
