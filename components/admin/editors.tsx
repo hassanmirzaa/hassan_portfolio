@@ -2,12 +2,13 @@
 
 import { useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/browser"
+import { coverScreens, isSlot, type Slot } from "@/lib/cover"
 
 const BUCKET = "project-assets"
 const MAX_WIDTH = 1290 // px. Phone screenshots are never shown wider than this.
 const ALLOWED = ["image/png", "image/jpeg", "image/webp", "image/avif"]
 
-export type ScreenItem = { url: string; caption?: string; text?: string }
+export type ScreenItem = { url: string; caption?: string; text?: string; slot?: Slot }
 export type FeatureItem = { title: string; text?: string }
 export type HighlightItem = { value: string; label: string }
 
@@ -68,6 +69,11 @@ export function ScreensEditor({ name, initial, folder }: { name: string; initial
   }
 
   const patch = (i: number, p: Partial<ScreenItem>) => setItems((l) => l.map((x, k) => (k === i ? { ...x, ...p } : x)))
+  // A position holds one screen: picking it for this screen frees it from any other.
+  const setSlot = (i: number, slot: Slot | undefined) =>
+    setItems((l) => l.map((x, k) => (k === i ? { ...x, slot } : slot && x.slot === slot ? { ...x, slot: undefined } : x)))
+  const onCard = coverScreens(items)
+  const usingPicks = items.some((x) => x.slot)
 
   return (
     <div className="ed">
@@ -94,6 +100,25 @@ export function ScreensEditor({ name, initial, folder }: { name: string; initial
       {busy.length > 0 && <div className="msg-ok">Uploading {busy.join(", ")}…</div>}
       {error && <div className="msg-err" role="alert">{error}</div>}
 
+      {items.length > 0 && (
+        <div className="cprev">
+          <div className="cprev-row" aria-label="Preview of the phones on the home card">
+            {onCard.map((it, i) => (
+              <figure key={it.url + i} className={onCard.length === 3 && i === 1 ? "mid" : ""}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={it.url} alt="" />
+                <figcaption>{usingPicks ? (it.slot ?? "") : ""}</figcaption>
+              </figure>
+            ))}
+          </div>
+          <p className="hint">
+            {usingPicks
+              ? "This is how the phones stand on the home card. Pick all three for the full fan."
+              : "Home card preview. Nothing is picked, so the first three screens are used. Choose Left, Center and Right below to decide."}
+          </p>
+        </div>
+      )}
+
       <ol className="scr-list">
         {items.map((it, i) => (
           <li key={it.url + i}>
@@ -101,6 +126,15 @@ export function ScreensEditor({ name, initial, folder }: { name: string; initial
             <img className="thumb" src={it.url} alt="" />
             <div className="scr-fields">
               <div className="scr-n">Screen {i + 1}{i === 0 ? " · cover" : ""}</div>
+              <label className="scr-slot">
+                <span>On the home card</span>
+                <select value={it.slot ?? ""} onChange={(e) => setSlot(i, isSlot(e.target.value) ? e.target.value : undefined)} aria-label={`Screen ${i + 1} position on the home card`}>
+                  <option value="">Not on the card</option>
+                  <option value="left">Left</option>
+                  <option value="center">Center (front)</option>
+                  <option value="right">Right</option>
+                </select>
+              </label>
               <input type="text" value={it.caption ?? ""} onChange={(e) => patch(i, { caption: e.target.value })} placeholder="Title (e.g. Order tracking)" aria-label={`Screen ${i + 1} title`} maxLength={80} />
               <textarea value={it.text ?? ""} onChange={(e) => patch(i, { text: e.target.value })} placeholder="What this screen does, in a sentence or two" aria-label={`Screen ${i + 1} description`} maxLength={400} />
             </div>

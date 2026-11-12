@@ -79,6 +79,7 @@ const screensSchema = z
       url: z.string().regex(/^https?:\/\/|^\//, "Screen URLs must start with https:// or /"),
       caption: z.string().max(80).optional(),
       text: z.string().max(400).optional(),
+      slot: z.enum(["left", "center", "right"]).optional(),
     }),
   )
   .max(30)
@@ -113,7 +114,13 @@ export async function saveProject(id: string | null, _: ActionState, form: FormD
   })
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-  const screens = json(form, "screens_json", screensSchema, []).map((s) => ({ url: s.url, caption: clean(s.caption), text: clean(s.text) }))
+  // Each home-card position (left / center / right) can hold one screen; a repeat is dropped.
+  const taken = new Set<string>()
+  const screens = json(form, "screens_json", screensSchema, []).map((s) => {
+    const slot = s.slot && !taken.has(s.slot) ? s.slot : undefined
+    if (slot) taken.add(slot)
+    return { url: s.url, caption: clean(s.caption), text: clean(s.text), slot }
+  })
   const features = json(form, "features_json", featuresSchema, []).map((f) => ({ title: f.title.trim(), text: clean(f.text) }))
   const highlights = json(form, "highlights_json", highlightsSchema, [])
   const platforms = form.getAll("platforms").map(String).filter((x) => ["ios", "android", "web"].includes(x))

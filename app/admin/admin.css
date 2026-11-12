@@ -71,6 +71,16 @@
 .scr-fields input,.scr-fields textarea{width:100%;border:1.5px solid var(--ink);border-radius:10px;padding:8px 10px;font:inherit;background:#fff}
 .scr-fields textarea{min-height:64px;resize:vertical}
 .scr-n{font-family:var(--mono);font-size:11px;color:var(--oxblood)}
+.scr-slot{display:flex;align-items:center;gap:8px;font-size:13px}
+.scr-slot span{color:var(--oxblood);font-family:var(--mono);font-size:11px;white-space:nowrap}
+.scr-slot select{border:1.5px solid var(--ink);border-radius:10px;padding:6px 8px;font:inherit;background:#fff;min-width:0}
+.cprev{border:var(--b);border-radius:16px;padding:14px;background:#0f2e29;color:#e8efe9;margin-bottom:12px}
+.cprev .hint{position:static;color:#bcd0c8;opacity:1;margin:10px 0 0;font-family:inherit;font-size:12px}
+.cprev-row{display:flex;align-items:flex-end;justify-content:center;gap:12px;min-height:120px}
+.cprev figure{margin:0;display:grid;justify-items:center;gap:6px}
+.cprev img{width:62px;aspect-ratio:923/2000;object-fit:cover;object-position:top;border:2px solid #000;border-radius:12px;background:#222}
+.cprev figure.mid img{width:78px}
+.cprev figcaption{font-family:var(--mono);font-size:11px;min-height:14px;text-transform:capitalize}
 .scr-act{display:grid;gap:6px}
 .hl-row{grid-template-columns:140px 1fr;display:grid}
 .thumb{width:92px;aspect-ratio:923/2000;object-fit:cover;object-position:top;border:var(--b);border-radius:14px;background:#ddd}

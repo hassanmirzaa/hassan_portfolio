@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase"
+import type { Slot } from "@/lib/cover"
 
-export type Screen = { url: string; caption?: string; text?: string; alt?: string }
+export type Screen = { url: string; caption?: string; text?: string; alt?: string; slot?: Slot }
 export type Feature = { title: string; text?: string }
 export type Highlight = { value: string; label: string }
 export type Platform = "ios" | "android" | "web"

@@ -58,7 +58,7 @@ export type ProjectData = {
   metrics?: string | null
   accent_color?: string
   cover_image?: string | null
-  screens?: { url: string; caption?: string; text?: string }[]
+  screens?: { url: string; caption?: string; text?: string; slot?: "left" | "center" | "right" }[]
   client?: string | null
   platforms?: string[]
   features?: { title: string; text?: string }[]
