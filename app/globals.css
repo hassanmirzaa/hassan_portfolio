@@ -1405,55 +1405,26 @@ h2.h2 em {
   }
 }
 
-/* ───────── selected work (bento grid) ───────── */
-.bt-feats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 0;
-}
-.bt-feats li {
-  list-style: none;
-  border: 1.5px solid var(--ink);
-  border-radius: 99px;
-  padding: 4px 10px;
-  font-size: 12px;
-  background: #fff;
-  max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.bt-feats li.more {
-  background: var(--brass-soft);
-}
-/* No working screenshot: the app's initials in place of the phones. */
-.bt-mono {
-  font-family: var(--display);
-  font-weight: 800;
-  letter-spacing: -0.06em;
-  line-height: 1;
-  color: var(--on-art);
-  transition: transform 0.6s var(--ease);
-}
-.bt:hover .bt-mono {
-  transform: scale(1.05) rotate(-3deg);
-}
+/* ───────── selected work (bento grid) ─────────
+   Every tile: header (number + arrow), copy, then a framed "window" holding the phones. The window is
+   its own box, so text and phones never overlap, and the phones are cropped by its bottom edge. Phone
+   size comes from the tile width (container units), so a tile looks right at any column width. */
 .bento {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-auto-rows: 320px;
+  grid-auto-rows: 360px;
   gap: clamp(14px, 1.6vw, 22px);
 }
 .bt {
   --on-art: var(--paper);
-  --deco-line: rgba(255, 255, 255, 0.3);
+  --pwb: 29cqw;
+  container-type: inline-size;
   position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border: 2px solid var(--ink);
-  border-radius: 24px;
+  border-radius: 26px;
   background: var(--accent, var(--emerald));
   color: var(--on-art);
   text-decoration: none;
@@ -1463,156 +1434,250 @@ h2.h2 em {
 }
 .bt.lt {
   --on-art: var(--ink);
-  --deco-line: rgba(20, 17, 13, 0.28);
-}
-.bt::before {
-  content: "";
-  position: absolute;
-  right: -18%;
-  bottom: -30%;
-  width: 80%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 1.5px dashed var(--deco-line);
-  z-index: -1;
 }
 .bt:hover {
   transform: translate(-2px, -3px);
   box-shadow: 8px 10px 0 var(--ink);
 }
-.bt.big {
-  grid-column: span 2;
-  grid-row: span 2;
-}
-.bt-copy {
-  position: relative;
-  z-index: 2;
-  padding: 18px 64px 0 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.bt.big .bt-copy {
-  padding: 28px 30px 0;
-  max-width: 50%;
-  gap: 14px;
-}
+
 .bt-top {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  padding: 16px 16px 0 18px;
   font-family: var(--mono);
-  font-size: 11px;
-  opacity: 0.8;
+  font-size: 12px;
+  font-weight: 700;
 }
-.bt-tag {
-  padding: 3px 9px;
-  border: 1px solid var(--deco-line);
-  border-radius: 99px;
+.bt-go {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  font-family: var(--body);
+  font-weight: 400;
+  transition: transform 0.3s var(--ease), background 0.3s, color 0.3s;
+}
+.bt:hover .bt-go {
+  transform: translateX(3px) rotate(-8deg);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.bt-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 18px 0;
 }
 .bt h3 {
   font-family: var(--display);
   font-weight: 800;
-  font-size: 23px;
-  letter-spacing: -0.035em;
-  line-height: 1;
-}
-.bt.big h3 {
-  font-size: clamp(38px, 4vw, 58px);
-  letter-spacing: -0.045em;
-  line-height: 0.95;
+  font-size: 24px;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+  text-wrap: balance;
 }
 .bt p {
   font-size: 13.5px;
-  line-height: 1.45;
-  opacity: 0.82;
+  line-height: 1.4;
+  opacity: 0.85;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   overflow: hidden;
 }
-.bt.big p {
-  font-size: 17px;
-  line-height: 1.5;
+.bt-feats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  margin-top: 6px;
 }
-.bt .bt-feats li {
+.bt-feats li {
+  list-style: none;
+  border: 1.5px solid var(--ink);
+  border-radius: 99px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  background: #fff;
   color: var(--ink);
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.bt .pstack {
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  top: 150px;
-  align-items: flex-start;
-  transition: transform 0.6s var(--ease);
+.bt-feats li.more {
+  background: var(--brass-soft);
+  font-weight: 700;
 }
-.bt.big .pstack {
-  left: auto;
-  right: 2%;
-  top: auto;
-  bottom: -16%;
-  width: 58%;
-}
-.bt.big .pstack .phone {
-  width: 36%;
-}
-.bt.big .pstack.n1 .phone {
-  width: 54%;
-}
-.bt:hover .pstack {
-  transform: translateY(-12px);
-}
-.bt .pstack .phone {
+
+/* the framed window */
+.bt-stage {
+  --sh: 176px;
+  position: relative;
+  margin: auto 12px 12px;
+  height: var(--sh);
   flex: none;
-}
-.bento .bt .pstack .phone {
-  width: 38%;
-  box-shadow: 0 0 0 1.5px #3c3c3f inset, 0 0 0 1px rgba(0, 0, 0, 0.5), 0 24px 40px -16px rgba(0, 0, 0, 0.6);
-}
-.bento .bt .pstack.n1 .phone {
-  width: 50%;
-  transform: rotate(-4deg);
-}
-.bt .bt-mono {
-  position: absolute;
-  right: 18px;
-  bottom: 6px;
-  font-size: 92px;
-  opacity: 0.85;
-}
-.bt.big .bt-mono {
-  font-size: 200px;
-  right: 34px;
-}
-.bt-go {
-  position: absolute;
-  right: 16px;
-  top: 16px;
-  z-index: 2;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  background: color-mix(in srgb, var(--accent, var(--emerald)) 52%, #000);
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
+}
+.bt.lt .bt-stage {
+  background: color-mix(in srgb, var(--accent) 80%, #000);
+}
+.bt-tag {
+  position: absolute;
+  top: -11px;
+  left: 14px;
+  z-index: 3;
+  padding: 3px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 99px;
   background: var(--paper);
   color: var(--ink);
-  border: 1.5px solid var(--ink);
-  transition: transform 0.3s var(--ease), background 0.3s, color 0.3s;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  transform: rotate(-3deg);
+}
+
+/* phones stand on the window's bottom edge and are cropped by it */
+.bento .bt .bt-stage .pstack {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  border-radius: 14px;
+  --pw: clamp(64px, var(--pwb), 112px);
+  --up: 0px;
+  --spread: 1;
+  --sink: max(0px, calc(var(--pw) * 2.165 - var(--sh) + 28px));
+}
+.bento .bt .bt-stage .pstack.n1 {
+  --pw: clamp(76px, calc(var(--pwb) * 1.2), 132px);
+}
+.bento .bt .bt-stage .pstack .phone {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--sink) * -1);
+  width: var(--pw);
+  margin-left: calc(var(--pw) / -2);
+  --x: 0;
+  --y: 0px;
+  --r: 0deg;
+  transform: translate(calc(var(--x) * var(--pw) * var(--spread)), calc(var(--y) - var(--up))) rotate(var(--r));
+  box-shadow: 0 0 0 1.5px #3c3c3f inset, 0 0 0 1px rgba(0, 0, 0, 0.5), 0 -8px 24px -8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.6s var(--ease);
+}
+.bento .bt .bt-stage .pstack.n1 .phone {
+  --r: -3deg;
+}
+.bento .bt .bt-stage .pstack.n2 .phone:nth-child(1) {
+  --x: -0.56;
+  --r: -6deg;
+  --y: 8px;
+}
+.bento .bt .bt-stage .pstack.n2 .phone:nth-child(2) {
+  --x: 0.56;
+  --r: 6deg;
+  --y: -6px;
+}
+.bento .bt .bt-stage .pstack.n3 .phone:nth-child(1) {
+  --x: -0.98;
+  --r: -8deg;
+  --y: 14px;
+}
+.bento .bt .bt-stage .pstack.n3 .phone:nth-child(2) {
+  --x: 0;
+  --y: -8px;
+  z-index: 2;
+}
+.bento .bt .bt-stage .pstack.n3 .phone:nth-child(3) {
+  --x: 0.98;
+  --r: 8deg;
+  --y: 14px;
+}
+.bt:hover .bt-stage .pstack {
+  --up: 12px;
+  --spread: 1.08;
+}
+/* No working screenshot: the app's initials fill the window. */
+.bt-mono {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(56px, 24cqw, 96px);
+  letter-spacing: -0.06em;
+  line-height: 1;
+  color: var(--on-art);
+  transition: transform 0.6s var(--ease);
+}
+.bt:hover .bt-mono {
+  transform: scale(1.06) rotate(-3deg);
+}
+
+/* the featured tile: same anatomy, scaled up */
+.bt.big {
+  grid-column: span 2;
+  grid-row: span 2;
+  --pwb: 28cqw;
+}
+.bt.big .bt-top {
+  padding: 24px 24px 0 28px;
+  font-size: 13px;
 }
 .bt.big .bt-go {
-  right: auto;
-  top: auto;
-  left: 30px;
-  bottom: 28px;
   width: 48px;
   height: 48px;
+  font-size: 20px;
 }
-.bt:hover .bt-go {
-  transform: translateX(4px);
-  background: var(--ink);
-  color: var(--paper);
+.bt.big .bt-copy {
+  padding: 20px 28px 0;
+  gap: 14px;
 }
+.bt.big h3 {
+  font-size: clamp(38px, 4vw, 60px);
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+.bt.big p {
+  font-size: 17px;
+  line-height: 1.45;
+  max-width: 34em;
+}
+.bt.big .bt-stage {
+  --sh: clamp(330px, 29vw, 420px);
+  margin: auto 16px 16px;
+  border-radius: 20px;
+}
+.bt.big .bt-tag {
+  top: -13px;
+  left: 20px;
+  font-size: 12px;
+  padding: 4px 12px;
+}
+.bento .bt.big .bt-stage .pstack {
+  border-radius: 18px;
+  --pw: clamp(120px, var(--pwb), 210px);
+}
+.bento .bt.big .bt-stage .pstack.n1 {
+  --pw: clamp(140px, calc(var(--pwb) * 1.2), 250px);
+}
+.bt.big .bt-mono {
+  font-size: clamp(120px, 26cqw, 240px);
+}
+
 @media (max-width: 1100px) {
   .bento {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1620,67 +1685,82 @@ h2.h2 em {
 }
 @media (max-width: 600px) {
   .bento {
-    grid-auto-rows: 230px;
+    grid-auto-rows: minmax(262px, auto);
     gap: 12px;
   }
-  .bt.big {
-    grid-row: span 2;
+  .bt {
+    border-radius: 20px;
+    box-shadow: 4px 5px 0 var(--ink);
+  }
+  .bt-top {
+    padding: 12px 12px 0 14px;
+  }
+  .bt-go {
+    width: 30px;
+    height: 30px;
   }
   .bt-copy {
-    padding: 14px 44px 0 14px;
-  }
-  .bt.big .bt-copy {
-    padding: 22px 22px 0;
-    max-width: none;
+    padding: 8px 14px 0;
   }
   .bt h3 {
-    font-size: 17px;
+    font-size: 18px;
   }
   .bt p {
     display: none;
   }
-  .bt.big p {
-    display: -webkit-box;
-    font-size: 15px;
-    max-width: 62%;
-  }
-  .bt.big .bt-feats {
-    display: none;
+  .bt-stage {
+    --sh: 128px;
+    margin: auto 8px 8px;
+    border-radius: 14px;
   }
   .bt-tag {
     display: none;
   }
-  .bt .pstack {
-    left: 2%;
-    right: 2%;
-    top: 96px;
+  .bento .bt .bt-stage .pstack {
+    border-radius: 12px;
   }
-  .bt.big .pstack {
-    left: auto;
-    right: 0;
-    top: auto;
-    bottom: -14%;
-    width: 74%;
+  .bento .bt .bt-stage .pstack.n3 .phone:nth-child(1) {
+    --x: -0.9;
   }
-  .bt .bt-mono {
-    font-size: 64px;
+  .bento .bt .bt-stage .pstack.n3 .phone:nth-child(3) {
+    --x: 0.9;
   }
-  .bt.big .bt-mono {
-    font-size: 120px;
+  .bt.big {
+    grid-row: span 1;
+    min-height: 440px;
   }
-  .bt-go {
-    right: 10px;
-    top: 10px;
-    width: 30px;
-    height: 30px;
+  .bt.big .bt-top {
+    padding: 16px 16px 0 18px;
   }
   .bt.big .bt-go {
-    left: auto;
-    bottom: auto;
-    right: 14px;
-    top: 14px;
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
+  }
+  .bt.big .bt-copy {
+    padding: 12px 18px 0;
+    gap: 10px;
+  }
+  .bt.big h3 {
+    font-size: 36px;
+  }
+  .bt.big p {
+    display: -webkit-box;
+    font-size: 15px;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+  .bt.big .bt-feats {
+    display: none;
+  }
+  .bt.big .bt-stage {
+    --sh: 200px;
+    margin: auto 10px 10px;
+  }
+  .bt.big .bt-tag {
+    display: block;
+    top: -11px;
+    left: 14px;
+    font-size: 11px;
   }
 }
 

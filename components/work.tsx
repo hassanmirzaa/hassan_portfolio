@@ -67,11 +67,13 @@ function Tile({ p, i, big }: { p: Project; i: number; big: boolean }) {
       style={{ ["--accent" as string]: p.accent }}
       aria-label={`${p.title}: ${p.summary}`}
     >
+      <div className="bt-top">
+        <span>{String(i + 1).padStart(2, "0")}</span>
+        <span className="bt-go" aria-hidden="true">
+          →
+        </span>
+      </div>
       <div className="bt-copy">
-        <div className="bt-top">
-          <span>{String(i + 1).padStart(2, "0")}</span>
-          {tag && <span className="bt-tag">{tag}</span>}
-        </div>
         <h3>{p.title}</h3>
         <p>{p.summary}</p>
         {big && p.features.length > 0 && (
@@ -83,14 +85,10 @@ function Tile({ p, i, big }: { p: Project; i: number; big: boolean }) {
           </ul>
         )}
       </div>
-      <CoverStack
-        screens={p.screens}
-        monogram={initials(p.title)}
-        sizes={big ? "(max-width: 600px) 30vw, 200px" : "(max-width: 600px) 22vw, 130px"}
-      />
-      <span className="bt-go" aria-hidden="true">
-        →
-      </span>
+      <div className="bt-stage">
+        {tag && <span className="bt-tag">{tag}</span>}
+        <CoverStack screens={p.screens} monogram={initials(p.title)} sizes={big ? "(max-width: 600px) 30vw, 220px" : "(max-width: 600px) 22vw, 120px"} />
+      </div>
     </Link>
   )
 }
