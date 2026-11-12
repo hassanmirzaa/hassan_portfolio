@@ -119,21 +119,6 @@ export default async function ProjectPage({ params }: Props) {
             </div>
           )}
 
-          {p.features.length > 0 && (
-            <section className="case-feats" aria-labelledby="feats-title">
-              <h2 id="feats-title">What it does</h2>
-              <ol>
-                {p.features.map((f, i) => (
-                  <li key={f.title}>
-                    <span className="n">{String(i + 1).padStart(2, "0")}</span>
-                    <h3>{f.title}</h3>
-                    {f.text && <p>{f.text}</p>}
-                  </li>
-                ))}
-              </ol>
-            </section>
-          )}
-
           {p.screens.length > 1 && (
             <section className="case-shots" aria-labelledby="shots-title">
               <h2 id="shots-title">Every screen</h2>
@@ -150,6 +135,21 @@ export default async function ProjectPage({ params }: Props) {
                   </figure>
                 ))}
               </div>
+            </section>
+          )}
+
+          {p.features.length > 0 && (
+            <section className="case-feats" aria-labelledby="feats-title">
+              <h2 id="feats-title">What it does</h2>
+              <ol>
+                {p.features.map((f, i) => (
+                  <li key={f.title}>
+                    <span className="n">{String(i + 1).padStart(2, "0")}</span>
+                    <h3>{f.title}</h3>
+                    {f.text && <p>{f.text}</p>}
+                  </li>
+                ))}
+              </ol>
             </section>
           )}
 
